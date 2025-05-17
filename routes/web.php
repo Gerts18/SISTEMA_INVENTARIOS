@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     //Rutas de inventarios
-    Route::group( ['prefix' => 'inventarios'], function (){
+    Route::group( ['prefix' => 'inventarios','middleware' => ['role:Administrador']], function (){
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventarios');
 
