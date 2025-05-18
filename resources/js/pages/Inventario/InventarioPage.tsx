@@ -31,6 +31,8 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
     // Estado para saber qué mostrar
     const [view, setView] = useState<"catalogo" | "solicitudes">("catalogo")
 
+    const [num, setNum] = useState(contador)
+
     return (
         <AppLayout>
 
@@ -46,9 +48,9 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
                 {/* Contenido o Componente a renderizar */}
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
 
-                    <p>Contador  {contador} </p>
+                    <p>Contador  {num} </p>
 
-                    <button onClick={() => contador += 1} >
+                    <button onClick={() => setNum(num + 1)} >
                         aumentar
                     </button>
 
