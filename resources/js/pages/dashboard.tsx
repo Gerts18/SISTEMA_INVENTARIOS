@@ -3,12 +3,6 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Inicio',
-        href: '/dashboard',
-    },
-];
 
 export default function Dashboard() {
     return (

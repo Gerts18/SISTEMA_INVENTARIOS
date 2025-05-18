@@ -12,15 +12,17 @@ const mainNavItems: NavItem[] = [
         title: 'Inicio',
         href: '/dashboard',
         icon: House,
+        permissions: ''
     },
     {
         title: 'Inventario',
         href: '/inventarios',
         icon: Package,
+        permissions: 'role:Administrador'
     },
 ];
 
-const footerNavItems: NavItem[] = [
+/* const footerNavItems: NavItem[] = [
     {
         title: 'Repository',
         href: 'https://github.com/laravel/react-starter-kit',
@@ -31,7 +33,7 @@ const footerNavItems: NavItem[] = [
         href: 'https://laravel.com/docs/starter-kits#react',
         icon: BookOpen,
     },
-];
+]; */
 
 export function AppSidebar() {
     return (

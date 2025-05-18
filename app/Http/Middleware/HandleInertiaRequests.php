@@ -39,12 +39,19 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $user = $request->user();
+        $role = null;
+        if ($user && method_exists($user, 'getRoleNames')) {
+            $role = $user->getRoleNames()->first(); // Primer rol asignado
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'role' => $role,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),
