@@ -10,7 +10,9 @@ interface AppLayoutProps {
 
 export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => (
     <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-            <SidebarTrigger className="-ml-1" />
+            <div className="absolute top-4 left-4 z-50">
+                <SidebarTrigger className="-ml-1" />
+            </div>
             {children}
     </AppLayoutTemplate>
 );
