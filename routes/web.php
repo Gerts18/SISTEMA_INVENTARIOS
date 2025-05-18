@@ -5,23 +5,25 @@ use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
 
+//Ruta general
 Route::get('/', function () {
     if (Auth::check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('inicio');
     }
     return redirect()->route('login');
 })->name('home');
 
+//Rutas accesibles solo por usuarios autenticados
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('inicio', function () {
+        return Inertia::render('InicioPage');
+    })->name('inicio');
 
-    //Rutas de inventarios
-    Route::group( ['prefix' => 'inventarios','middleware' => ['role:Administrador']], function (){
+    //Rutas de inventario
+    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega']], function (){
 
-        Route::get('/',[InventariosController::class, 'show'])->name('inventarios');
+        Route::get('/',[InventariosController::class, 'show'])->name('inventario');
 
     });
 

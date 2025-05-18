@@ -5,19 +5,21 @@ import {PageProps} from '@/types/auth'
 
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
+    //Obteniendo props de Inertia
     const page = usePage<PageProps>();
-    //console.log('auth:', page.props.auth);
+ 
     const userRole = page.props.auth?.role;
-    //console.log('userRole:', userRole);
 
-    // Filtra los items según el rol del usuario
+    // Filtra los items según los roles del usuario (soporta varios roles)
     const filteredItems = items.filter(item => {
         if (!item.permissions) return true;
         if (item.permissions.startsWith('role:')) {
-            const requiredRole = item.permissions.replace('role:', '').trim().toLowerCase();
+            const requiredRoles = item.permissions
+                .replace('role:', '')
+                .split('|')
+                .map(r => r.trim().toLowerCase());
             const currentRole = (userRole ?? '').trim().toLowerCase();
-           // console.log('requiredRole:', requiredRole, 'userRole:', currentRole);
-            return currentRole === requiredRole;
+            return requiredRoles.includes(currentRole);
         }
         return true;
     });

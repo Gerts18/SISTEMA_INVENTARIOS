@@ -4,7 +4,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
 
-export default function Dashboard() {
+export default function InicioPage() {
     return (
         <AppLayout>
             {/* <Head title="Inicio" /> */}

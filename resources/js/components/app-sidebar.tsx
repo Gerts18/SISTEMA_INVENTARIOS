@@ -4,21 +4,27 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, House, Package } from 'lucide-react';
+import { BookOpen, Folder, House, Package, Truck } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Inicio',
-        href: '/dashboard',
+        href: '/inicio',
         icon: House,
         permissions: ''
     },
     {
         title: 'Inventario',
-        href: '/inventarios',
+        href: '/inventario',
         icon: Package,
-        permissions: 'role:Administrador'
+        permissions: 'role:Administrador|Diseño|Bodega'
+    },
+    {
+        title: 'Entradas/Salidas',
+        href: '/gestion',
+        icon: Truck,
+        permissions: 'role:Administrador|Bodega'
     },
 ];
 
