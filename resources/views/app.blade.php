@@ -32,9 +32,9 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/recycle.png" sizes="any">
-        <link rel="icon" href="/recycle.png" type="image/svg+xml">
-        <link rel="apple-touch-icon" href="/recycle.png">
+        <link rel="icon" href="/box.png" sizes="any">
+        <link rel="icon" href="/box.png" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="/box.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

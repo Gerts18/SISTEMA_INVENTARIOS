@@ -3,7 +3,7 @@ import { useState } from "react"
 
 
 import {PageProps} from '@/types/auth'
-import {usePage } from '@inertiajs/react'
+import {Head, usePage } from '@inertiajs/react'
 
 //Componentes
 import SubNavBar from "@/components/Navegacion/SubNavbar"
@@ -35,6 +35,8 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
 
     return (
         <AppLayout>
+            <Head title="Inventarios" />
+
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
 
