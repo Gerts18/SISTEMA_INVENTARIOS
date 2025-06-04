@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
+use App\Http\Controllers\Gestion\GestionesController;
 
 //Ruta general
 Route::get('/', function () {
@@ -24,6 +25,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega']], function (){
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
+
+    });
+
+    Route::group( ['prefix' => 'gestion','middleware' => ['role:Administrador|Bodega']], function (){
+
+        Route::get('/',[GestionesController::class, 'show'])->name('gestion');
 
     });
 

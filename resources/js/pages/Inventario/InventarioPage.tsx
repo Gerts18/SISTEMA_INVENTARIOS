@@ -35,7 +35,7 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
 
     return (
         <AppLayout>
-            <Head title="Inventarios" />
+            <Head title="Catálogo" />
 
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">

@@ -74,7 +74,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="******"
+                            placeholder="********"
                         />
                         <InputError message={errors.password} />
                     </div>
