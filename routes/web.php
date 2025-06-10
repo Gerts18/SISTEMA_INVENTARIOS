@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -22,19 +23,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('inicio');
 
     //Rutas de inventario
-    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega']], function (){
+    Route::group(['prefix' => 'inventario', 'middleware' => ['role:Administrador|Diseño|Bodega']], function () {
 
-        Route::get('/',[InventariosController::class, 'show'])->name('inventario');
-
+        Route::get('/', [InventariosController::class, 'show'])->name('inventario');
     });
 
-    Route::group( ['prefix' => 'gestion','middleware' => ['role:Administrador|Bodega']], function (){
+    Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
 
-        Route::get('/',[GestionesController::class, 'show'])->name('gestion');
+        Route::get('/', [GestionesController::class, 'show'])->name('gestion');
 
+        Route::get('/producto/consultar', [GestionesController::class, 'consultarProducto'])->name('producto.consultar');
     });
-
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
