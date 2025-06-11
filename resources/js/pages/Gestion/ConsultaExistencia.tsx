@@ -6,39 +6,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { router } from '@inertiajs/react'
+import { Producto } from "@/types/inventarios"
 
-// Simulación de productos
-const productos = [
-    {
-        codigo: "00001",
-        nombre: "Lijas",
-        stock: 22,
-        categoria: "Madera"
-    },
-    {
-        codigo: "00002",
-        nombre: "Martillo",
-        stock: 10,
-        categoria: "Herramientas"
+const ConsultaExistencia = () => {
+
+    const [productNumber, setProductNumber] = useState("")
+    const [producto, setProducto] = useState<Producto | undefined>(undefined)
+    const [buscado, setBuscado] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const handleConsultar = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault();
+        setLoading(true)
+        setBuscado(false)
+        setProducto(undefined)
+        try {
+            const res = await fetch(`/gestion/producto-existencia/${encodeURIComponent(productNumber)}`)
+            const data = await res.json()
+            setBuscado(true)
+            if (data.found) {
+                setProducto(data.producto)
+            } else {
+                setProducto(undefined)
+            }
+        } catch (err) {
+            setProducto(undefined)
+            setBuscado(true)
+        } finally {
+            setLoading(false)
+        }
     }
-    // ...puedes agregar más productos simulados aquí
-]
-
-const ConsultaExistencia = ({ producto, flash }: any) => {
-
-    const [productNumber, setProductNumber] = useState("00001")
-
-    const handleConsultar = () => {
-        router.visit(route('producto.consultar'), {
-            method: 'get',
-            data: { codigo: productNumber },
-            only: ['producto', 'flash'],
-            preserveScroll: true,
-        })
-    }
-
-    const buscado = producto !== undefined || (flash && flash.error);
 
     return (
         <Card>
@@ -46,17 +43,26 @@ const ConsultaExistencia = ({ producto, flash }: any) => {
                 <CardTitle>EXISTENCIA</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="flex gap-4 items-end">
+                <div className="flex flex-col gap-4 items-stretch sm:flex-row sm:items-end">
+                    
                     <div className="space-y-2">
                         <Label htmlFor="product-number">Numero de Producto</Label>
                         <Input
                             id="product-number"
                             value={productNumber}
                             onChange={(e) => setProductNumber(e.target.value)}
-                            className="w-32"
+                            className="w-full sm:w-32"
                         />
                     </div>
-                    <Button onClick={handleConsultar}>Consultar Existencia</Button>
+
+                    <Button 
+                        onClick={handleConsultar} 
+                        disabled={loading || !productNumber}
+                        className="w-full sm:w-auto"
+                    >
+                        {loading ? "Consultando..." : "Consultar Existencia"}
+                    </Button>
+
                 </div>
 
                 {/* Resultado de la búsqueda */}
@@ -67,7 +73,7 @@ const ConsultaExistencia = ({ producto, flash }: any) => {
                                 <h3 className="text-blue-600 font-medium mb-2">Producto encontrado</h3>
                                 <Card>
                                     <CardContent className="p-4">
-                                        <div className="grid grid-cols-4 gap-4 text-sm">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                             <div>
                                                 <div className="font-medium">Nombre</div>
                                                 <div>{producto.nombre}</div>
@@ -87,13 +93,13 @@ const ConsultaExistencia = ({ producto, flash }: any) => {
                                         </div>
                                     </CardContent>
                                 </Card>
-                                <div className="mt-2 flex justify-end">
-                                    <Button>Agregar a la lista</Button>
+                                <div className="mt-2 flex flex-col sm:flex-row sm:justify-end gap-2">
+                                    <Button className="w-full sm:w-auto">Agregar a la lista</Button>
                                 </div>
                             </>
                         ) : (
                             <div className="text-red-600 font-medium">
-                                {flash?.error || "No se encontró el producto."}
+                                {"Producto no encontrado"}
                             </div>
                         )}
                     </div>

@@ -31,8 +31,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
 
         Route::get('/', [GestionesController::class, 'show'])->name('gestion');
-
-        Route::get('/producto/consultar', [GestionesController::class, 'consultarProducto'])->name('producto.consultar');
+        
+        Route::get('/producto-existencia/{codigo}', [GestionesController::class, 'productoExistencia']);
     });
 });
 

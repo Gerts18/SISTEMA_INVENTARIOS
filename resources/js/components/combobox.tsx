@@ -21,11 +21,11 @@ import {
 
 const frameworks = [
   {
-    value: "entrada",
+    value: "Entrada",
     label: "Entrada",
   },
   {
-    value: "salida",
+    value: "Salida",
     label: "Salida",
   },
 ]
@@ -63,7 +63,7 @@ export function Combobox({ value: controlledValue, onChange, className }: Combob
         >
           {value
             ? frameworks.find((framework) => framework.value === value)?.label
-            : "Selecciona una acción"}
+            : "Entrada"}
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>

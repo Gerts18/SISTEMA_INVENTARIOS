@@ -14,38 +14,29 @@ class GestionesController extends Controller
     {
         return Inertia::render(
             'Gestion/GestionPage',
-            [
-                'contador' => 0
-            ]
+            [ ]
         );
     }
 
-    public function consultarProducto(Request $request)
+    public function productoExistencia($codigo)
     {
-        $codigo = $request->query('codigo');
-
-        $producto = Producto::with('categoria')->where('codigo', $codigo)->first();
+        $producto = Producto::with('categoria')
+            ->where('codigo', $codigo)
+            ->first();
 
         if (!$producto) {
-            return Inertia::render(
-                'Gestion/GestionPage',
-                [
-                    'producto' => null,
-                    'flash' => ['error' => 'Producto no encontrado.'],
-                ]
-            );
+            return response()->json(['found' => false]);
         }
 
-        return Inertia::render(
-            'Gestion/GestionPage',
-            [
-                'producto' => [
-                    'codigo' => $producto->codigo,
-                    'nombre' => $producto->nombre,
-                    'stock' => $producto->stock,
-                    'categoria' => $producto->categoria?->nombre ?? 'Sin categoría',
-                ],
+        return response()->json([
+            'found' => true,
+            'producto' => [
+                'id' => $producto->producto_id,
+                'nombre' => $producto->nombre,
+                'codigo' => $producto->codigo,
+                'stock' => $producto->stock,
+                'categoria' => $producto->categoria ? $producto->categoria->nombre : '',
             ]
-        );
+        ]);
     }
 }

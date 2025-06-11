@@ -1,13 +1,13 @@
 import { Combobox } from "@/components/combobox"
 import AppLayout from "@/layouts/app-layout"
-import { Head, usePage } from "@inertiajs/react"
+import { Head } from "@inertiajs/react"
 import * as React from "react"
 import GestionComponent from "./GestionProductoComponent"
 
 
 const GestionPage = () => {
     const [tipo, setTipo] = React.useState("")
-    const { producto, flash } = usePage().props as any
+
 
     return (
         <AppLayout>
@@ -20,17 +20,10 @@ const GestionPage = () => {
                     <Combobox
                         value={tipo}
                         onChange={setTipo}
-
+        
                     />
 
-                    {tipo === "entrada" && (
-                        <GestionComponent producto={producto} flash={flash} />
-                    )}
-                    {tipo === "salida" && (
-                        <div>
-                            Salida
-                        </div>
-                    )}
+                    <GestionComponent tipo={!tipo ? "Entrada" : tipo} />
                     
                 </div>
                 
