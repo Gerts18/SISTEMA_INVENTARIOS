@@ -8,6 +8,11 @@ import GestionComponent from "./GestionProductoComponent"
 const GestionPage = () => {
     const [tipo, setTipo] = React.useState("")
 
+    // Determina el tipo real (por default "Entrada")
+    const tipoReal = !tipo ? "Entrada" : tipo
+
+    // Título dinámico
+    const titulo = tipoReal === "Entrada" ? "Entrada de Productos" : "Salida de Productos"
 
     return (
         <AppLayout>
@@ -20,10 +25,9 @@ const GestionPage = () => {
                     <Combobox
                         value={tipo}
                         onChange={setTipo}
-        
                     />
 
-                    <GestionComponent tipo={!tipo ? "Entrada" : tipo} />
+                    <GestionComponent tipo={tipoReal} titulo={titulo} />
                     
                 </div>
                 

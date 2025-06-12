@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import axios from "axios"
 
-import { Producto } from "@/types/inventarios"
+import { Producto, ProductoLista } from "@/types/inventarios"
 
-const ConsultaExistencia = () => {
 
+interface ConsultaExistenciaProps {
+    onAgregar: (producto: Producto) => void
+    lista: ProductoLista[]
+    tipo?: "Entrada" | "Salida"
+}
+
+const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExistenciaProps) => {
     const [productNumber, setProductNumber] = useState("")
     const [producto, setProducto] = useState<Producto | undefined>(undefined)
     const [buscado, setBuscado] = useState(false)
@@ -21,8 +28,8 @@ const ConsultaExistencia = () => {
         setBuscado(false)
         setProducto(undefined)
         try {
-            const res = await fetch(`/gestion/producto-existencia/${encodeURIComponent(productNumber)}`)
-            const data = await res.json()
+            const res = await axios.get(`/gestion/producto-existencia/${encodeURIComponent(productNumber)}`)
+            const data = res.data
             setBuscado(true)
             if (data.found) {
                 setProducto(data.producto)
@@ -37,6 +44,16 @@ const ConsultaExistencia = () => {
         }
     }
 
+    // Nuevo handler para agregar y limpiar
+    const handleAgregarYLimpiar = () => {
+        if (producto) {
+            onAgregar(producto)
+            setProducto(undefined)
+            setProductNumber("")
+            setBuscado(false)
+        }
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -44,7 +61,6 @@ const ConsultaExistencia = () => {
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex flex-col gap-4 items-stretch sm:flex-row sm:items-end">
-                    
                     <div className="space-y-2">
                         <Label htmlFor="product-number">Numero de Producto</Label>
                         <Input
@@ -54,15 +70,13 @@ const ConsultaExistencia = () => {
                             className="w-full sm:w-32"
                         />
                     </div>
-
                     <Button 
                         onClick={handleConsultar} 
-                        disabled={loading || !productNumber}
+                        disabled={loading || !productNumber || productNumber.length > 6}
                         className="w-full sm:w-auto"
                     >
                         {loading ? "Consultando..." : "Consultar Existencia"}
                     </Button>
-
                 </div>
 
                 {/* Resultado de la búsqueda */}
@@ -94,7 +108,16 @@ const ConsultaExistencia = () => {
                                     </CardContent>
                                 </Card>
                                 <div className="mt-2 flex flex-col sm:flex-row sm:justify-end gap-2">
-                                    <Button className="w-full sm:w-auto">Agregar a la lista</Button>
+                                    <Button
+                                        className="w-full sm:w-auto"
+                                        onClick={handleAgregarYLimpiar}
+                                        disabled={
+                                            lista.some(p => p.codigo === producto.codigo) ||
+                                            (tipo === "Salida" && producto.stock <= 0)
+                                        }
+                                    >
+                                        Agregar a la lista
+                                    </Button>
                                 </div>
                             </>
                         ) : (

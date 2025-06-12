@@ -35,6 +35,7 @@ class GestionesController extends Controller
                 'nombre' => $producto->nombre,
                 'codigo' => $producto->codigo,
                 'stock' => $producto->stock,
+                'precio_actual' => $producto->precio_actual,
                 'categoria' => $producto->categoria ? $producto->categoria->nombre : '',
             ]
         ]);
