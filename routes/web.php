@@ -25,6 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega']], function (){
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
+        Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
+        Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
 
     });
 
