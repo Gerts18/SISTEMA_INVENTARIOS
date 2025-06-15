@@ -36,18 +36,33 @@ class InventariosController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nombre' => 'required|string|max:255',
-            'codigo' => 'required|string|max:6|unique:productos,codigo',
-            'stock' => 'integer|min:0',
-            'precio_actual' => 'required|numeric|min:0',
-            'categoria_id' => 'required|exists:categorias_productos,categoria_id',
-        ]);
-        Producto::create($request->all());
-        // Aquí se guardaría el producto en la base de datos
-        // Producto::create($request->all());
+{
+    $messages = [
+        'nombre.required' => 'El nombre del producto es obligatorio.',
+        'codigo.required' => 'El código del producto es obligatorio.',
+        'codigo.max' => 'El código no debe ser mayor a 6 caracteres.',
+        'codigo.unique' => 'Este código ya está en uso.',
+        'stock.integer' => 'La cantidad debe ser un número entero.',
+        'stock.min' => 'La cantidad no puede ser negativa.',
+        'precio_actual.required' => 'El precio es obligatorio.',
+        'precio_actual.numeric' => 'El precio debe ser un número.',
+        'precio_actual.min' => 'El precio debe ser mayor o igual a 0.',
+        'categoria_id.required' => 'Debe seleccionar una categoría.',
+        'categoria_id.exists' => 'La categoría seleccionada no existe.',
+    ];
 
-        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
-    }
+    // Validación con mensajes personalizados
+    $request->validate([
+        'nombre' => 'required|string|max:255',
+        'codigo' => 'required|string|max:6|unique:productos,codigo',
+        'stock' => 'integer|min:0',
+        'precio_actual' => 'required|numeric|min:0',
+        'categoria_id' => 'required|exists:categorias_productos,categoria_id',
+    ], $messages);
+
+    Producto::create($request->all());
+
+    return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
+}
+
 }
