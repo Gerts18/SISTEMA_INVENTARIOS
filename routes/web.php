@@ -6,6 +6,7 @@ use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
 use App\Http\Controllers\Gestion\GestionesController;
+use App\Http\Controllers\Reportes\ReportesController;
 
 //Ruta general
 Route::get('/', function () {
@@ -28,14 +29,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [InventariosController::class, 'show'])->name('inventario');
     });
 
+    //Rutas para la gestión de inventario (Entradas y Salidas de productos)
     Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
 
         Route::get('/', [GestionesController::class, 'show'])->name('gestion');
         
         Route::get('/producto-existencia/{codigo}', [GestionesController::class, 'productoExistencia']);
 
-        // Nueva ruta para registrar gestión
         Route::post('/registrar', [GestionesController::class, 'registrarGestion']);
+    });
+
+    //Reportes de inventario
+    Route::group(['prefix' => 'reportes', 'middleware' => ['role:Administrador']], function () {
+
+        Route::get('/', [ReportesController::class, 'show'])->name('reportes');
+
     });
 });
 

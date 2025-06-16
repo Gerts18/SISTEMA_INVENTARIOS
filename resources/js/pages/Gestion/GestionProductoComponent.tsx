@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import ConsultaExistencia from "./ConsultaExistencia"
 import TablaProductos from "./TablaProductos"
-import { ProductoLista } from "@/types/inventarios"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import {
@@ -124,7 +123,6 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                     <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
                         <AlertDialogTrigger asChild>
                             <Button
-                                className={`px-6 py-2 rounded font-semibold text-white ${tipo === "Salida" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} disabled:opacity-60`}
                                 disabled={loading}
                             >
                                 {loading ? "Registrando..." : "Continuar"}

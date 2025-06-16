@@ -26,6 +26,12 @@ const mainNavItems: NavItem[] = [
         icon: Truck,
         permissions: 'role:Administrador|Bodega'
     },
+    {
+        title: 'Reportes',
+        href: '/reportes',
+        icon: BookOpen,
+        permissions: 'role:Administrador'
+    },
 ];
 
 /* const footerNavItems: NavItem[] = [

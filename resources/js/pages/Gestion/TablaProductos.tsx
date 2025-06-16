@@ -27,7 +27,7 @@ const TablaProductos = ({
           <div className="font-semibold text-blue-700 mb-2">{categoria}</div>
           {/* Responsive table wrapper */}
           <div className="overflow-x-auto rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full divide-y divide-gray-200 bg-zinc-100">
               <thead>
                 <tr>
                   <th className="px-2 py-1 border">Nombre</th>
