@@ -9,6 +9,9 @@ use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Reportes\ReportesController;
 
 //Ruta general
+// web.php (temporalmente para pruebas)
+Route::get('/test/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('inicio');
@@ -24,9 +27,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('inicio');
 
     //Rutas de inventario
-    Route::group(['prefix' => 'inventario', 'middleware' => ['role:Administrador|Diseño|Bodega']], function () {
 
-        Route::get('/', [InventariosController::class, 'show'])->name('inventario');
+    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega']], function (){
+
+        Route::get('/',[InventariosController::class, 'show'])->name('inventario');
+        Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
+        Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
+        Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
+        Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
+
     });
 
     //Rutas para la gestión de inventario (Entradas y Salidas de productos)

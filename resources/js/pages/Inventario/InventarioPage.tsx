@@ -11,6 +11,7 @@ import CatalogoInventario from "./CatalogoInventario"
 import SolicitudesDeMaterial from "./SolicitudesDeMaterial"
 import SolicitarMaterial from "./SolicitarMaterial"
 
+
 // Arreglo de vistas para la SubNavbar
 const views = [
   { key: "catalogo", label: "Catálogo" },
@@ -31,8 +32,6 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
     // Estado para saber qué mostrar
     const [view, setView] = useState<"catalogo" | "solicitudes">("catalogo")
 
-    const [num, setNum] = useState(contador)
-
     return (
         <AppLayout>
             <Head title="Catálogo" />
@@ -50,13 +49,8 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
                 {/* Contenido o Componente a renderizar */}
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
 
-                    <p>Contador  {num} </p>
 
-                    <button onClick={() => setNum(num + 1)} >
-                        aumentar
-                    </button>
-
-                    {view === "catalogo" && <CatalogoInventario/>}
+                    {view === "catalogo" && <CatalogoInventario/>} 
 
                     {view === "solicitudes" && (userRole === 'Bodega' || userRole === 'Administrador') && (
                         <SolicitudesDeMaterial />
