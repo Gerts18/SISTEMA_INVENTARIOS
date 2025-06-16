@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('entradas_inventario', function (Blueprint $table) {
-            $table->increments('entrada_inv_id');
+        Schema::create('gestion_inventario', function (Blueprint $table) {
+            $table->increments('gestion_inv_id');
             $table->unsignedBigInteger('usuario_id');
             $table->date('fecha');
             $table->text('imagen_comprobante')->nullable();
+            $table->enum('tipo_gestion', ['Entrada', 'Salida'])->default('Entrada');
             $table->timestamps();
 
             $table->foreign('usuario_id')->references('id')->on('users')->onDelete('cascade');
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('entrada_inventarios');
+        Schema::dropIfExists('gestion_inventario');
     }
 };

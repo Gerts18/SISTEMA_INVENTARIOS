@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Gestion\EntradaInventario;
+use App\Models\Gestion\GestionInventario;
 use App\Models\Gestion\SalidaInventario;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -53,13 +54,8 @@ class User extends Authenticatable
         ];
     }
 
-    public function salidasInventario()
+    public function gestionInventario()
     {
-        return $this->hasMany(SalidaInventario::class, 'usuario_id', 'id');
-    }
-
-    public function entradasInventario()
-    {
-        return $this->hasMany(EntradaInventario::class, 'usuario_id', 'id');
+        return $this->hasMany(GestionInventario::class, 'usuario_id', 'id');
     }
 }

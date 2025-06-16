@@ -2,8 +2,7 @@
 
 namespace App\Models\Productos;
 
-use App\Models\Gestion\EntradaProducto;
-use App\Models\Gestion\SalidaProducto;
+use App\Models\Gestion\GestionInventario;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
@@ -42,13 +41,10 @@ class Producto extends Model
         return $this->hasMany(PrecioHistorial::class, 'producto_id', 'producto_id');
     }
 
-    public function entradasProducto()
+    public function gestionProductos()
     {
-        return $this->hasMany(EntradaProducto::class, 'producto_id', 'producto_id');
+        return $this->hasMany(GestionInventario::class, 'producto_id', 'producto_id');
     }
 
-    public function salidasProducto()
-    {
-        return $this->hasMany(SalidaProducto::class, 'producto_id', 'producto_id');
-    }
+    
 }

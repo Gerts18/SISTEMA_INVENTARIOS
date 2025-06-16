@@ -1,17 +1,34 @@
+import { Combobox } from "@/components/combobox"
 import AppLayout from "@/layouts/app-layout"
+import { Head } from "@inertiajs/react"
+import * as React from "react"
+import GestionComponent from "./GestionProductoComponent"
 
 
 const GestionPage = () => {
+    const [tipo, setTipo] = React.useState("")
+
+    // Determina el tipo real (por default "Entrada")
+    const tipoReal = !tipo ? "Entrada" : tipo
+
+    // Título dinámico
+    const titulo = tipoReal === "Entrada" ? "Entrada de Productos" : "Salida de Productos"
 
     return (
         <AppLayout>
-
+            <Head title="Entradas/Salidas" />
+            
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
 
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
+                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min p-6">
 
+                    <Combobox
+                        value={tipo}
+                        onChange={setTipo}
+                    />
+
+                    <GestionComponent tipo={tipoReal} titulo={titulo} />
                     
-
                 </div>
                 
             </div>
