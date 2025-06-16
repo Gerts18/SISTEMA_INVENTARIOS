@@ -1,12 +1,27 @@
 import { useState, useMemo, useEffect } from "react"
 import ConsultaExistencia from "./ConsultaExistencia"
 import TablaProductos from "./TablaProductos"
-
 import { ProductoLista } from "@/types/inventarios"
+import axios from "axios"
+import { Button } from "@/components/ui/button"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }: any) => {
     // Estado para la lista de productos agregados
     const [lista, setLista] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    const [alerta, setAlerta] = useState<{ visible: boolean, mensaje: string, tipo: "success" | "error" }>({ visible: false, mensaje: "", tipo: "success" })
+    const [openDialog, setOpenDialog] = useState(false)
 
     // Reinicia la lista si cambia el tipo
     useEffect(() => {
@@ -59,6 +74,29 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         setLista(lista => lista.filter(p => p.codigo !== codigo));
     };
 
+    // Confirmación y registro
+    const handleRegistrar = async () => {
+        setLoading(true)
+        setAlerta({ visible: false, mensaje: "", tipo: "success" })
+        try {
+            const res = await axios.post("/gestion/registrar", {
+                tipo,
+                productos: lista.map(({ cantidadEntrada, codigo }) => ({ cantidadEntrada, codigo }))
+            })
+            if (res.data.success) {
+                setAlerta({ visible: true, mensaje: "¡Gestión registrada exitosamente!", tipo: "success" })
+                setLista([])
+            } else {
+                setAlerta({ visible: true, mensaje: res.data.message || "Error al registrar gestión", tipo: "error" })
+            }
+        } catch (e: any) {
+            setAlerta({ visible: true, mensaje: e.response?.data?.message || "Error inesperado", tipo: "error" })
+        } finally {
+            setLoading(false)
+            setOpenDialog(false)
+        }
+    }
+
     return (
         <section className="mx-auto p-6 space-y-6 border-4 rounded-2xl min-h-screen my-6">
             <h1
@@ -80,6 +118,38 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                 />
             </div>
 
+            {/* Botón continuar y alerta */}
+            {lista.length > 0 && (
+                <div className="flex flex-col items-end mt-6 gap-2">
+                    <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
+                        <AlertDialogTrigger asChild>
+                            <Button
+                                className={`px-6 py-2 rounded font-semibold text-white ${tipo === "Salida" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"} disabled:opacity-60`}
+                                disabled={loading}
+                            >
+                                {loading ? "Registrando..." : "Continuar"}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Está seguro de registrar esta gestión?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Se actualizará el stock y se guardará el registro.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                    onClick={handleRegistrar}
+                                    disabled={loading}
+                                >
+                                    {loading ? "Registrando..." : "Confirmar"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            )}
         </section>
     )
 }

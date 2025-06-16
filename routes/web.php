@@ -33,6 +33,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [GestionesController::class, 'show'])->name('gestion');
         
         Route::get('/producto-existencia/{codigo}', [GestionesController::class, 'productoExistencia']);
+
+        // Nueva ruta para registrar gestión
+        Route::post('/registrar', [GestionesController::class, 'registrarGestion']);
     });
 });
 

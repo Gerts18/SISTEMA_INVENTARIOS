@@ -26,7 +26,7 @@ const TablaProductos = ({
         <div key={categoria} className="mb-6">
           <div className="font-semibold text-blue-700 mb-2">{categoria}</div>
           {/* Responsive table wrapper */}
-          {/* <div className="overflow-x-auto rounded-lg">
+          <div className="overflow-x-auto rounded-lg">
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr>
@@ -87,7 +87,7 @@ const TablaProductos = ({
                 ))}
               </tbody>
             </table>
-          </div> */}
+          </div> 
           {/* Mobile cards */}
           <div className="sm:hidden mt-4 space-y-3">
             {productos.map(prod => (

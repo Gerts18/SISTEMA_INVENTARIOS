@@ -2,9 +2,7 @@
 
 namespace App\Models\Productos;
 
-use App\Models\Gestion\EntradaProducto;
 use App\Models\Gestion\GestionInventario;
-use App\Models\Gestion\SalidaProducto;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
