@@ -22,6 +22,29 @@ class InventariosController extends Controller
         );
     }
 
+    public function buscarPorCodigo($codigo)
+    {
+        $producto = Producto::where('codigo', $codigo)->first();
+
+        if (!$producto) {
+            return response()->json(['error' => 'Producto no encontrado.'], 404);
+        }
+
+        return response()->json(['producto' => $producto]);
+    }
+
+
+    public function productosPorCategoria($categoria_id)
+    {
+        $productos = Producto::where('categoria_id', $categoria_id)
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual') // ajusta si quieres más/menos campos
+            ->get();
+        
+        return response()->json([
+            'productos' => $productos,
+        ]);
+    }
+    
     public function catalogo(){
         $categorias = CategoriaProducto::all(['categoria_id', 'nombre']);
 

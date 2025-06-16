@@ -16,6 +16,17 @@ const CatalogoInventario = () => {
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [productoId, setProductoId] = useState('');
+    type Producto = {
+        id: number;
+        producto_id: string;
+        nombre: string;
+        codigo: string;
+        stock: number;
+        precio_actual: number;
+        categoria_id: string | number;
+    };
+    const [productos, setProductos] = useState<Producto[]>([]);
     const [formData, setFormData] = useState({
         nombre: '',
         codigo: '',
@@ -25,17 +36,15 @@ const CatalogoInventario = () => {
     });
 
     useEffect(() => {
-        if (open) {
-            axios
-                .get('/inventario/catalogo')
-                .then((response) => {
-                    setCategorias(response.data.categorias);
-                })
-                .catch((error) => {
-                    console.error('Error al obtener las categorías:', error);
-                });
-        }
-    }, [open]);
+        axios
+            .get('/inventario/catalogo')
+            .then((response) => {
+                setCategorias(response.data.categorias);
+            })
+            .catch((error) => {
+                console.error('Error al obtener las categorías:', error);
+            });
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,7 +120,6 @@ const CatalogoInventario = () => {
                         <DialogDescription>Complete los campos del formulario para registrar un nuevo producto.</DialogDescription>
                     </DialogHeader>
 
-                    {/* Mostrar el Alert si hay un error */}
                     {error && (
                         <Alert variant="destructive" className="mb-4">
                             <AlertTitle>Error</AlertTitle>
@@ -178,6 +186,98 @@ const CatalogoInventario = () => {
                     </form>
                 </DialogContent>
             </Dialog>
+            <div className="mt-7">
+                <div className="mb-6 flex items-end gap-4 px-4">
+                    <div>
+                        <Label className="text-lg font-semibold" htmlFor="numero_producto">
+                            Existencia
+                        </Label>
+                        <div className="mt-2 flex items-center gap-2">
+                            <Input
+                                id="producto_id"
+                                type="number"
+                                placeholder="Número de producto"
+                                min={1}
+                                className="w-48"
+                                value={productoId}
+                                onChange={(e) => setProductoId(e.target.value)}
+                            />
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    if (!productoId) {
+                                        setError('Por favor, ingrese un número de producto.');
+                                        return;
+                                    }
+                                    axios
+                                        .get(`/inventario/buscar/${productoId}`)
+                                        .then((response) => {
+                                            const producto = response.data.producto;
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                categoria_id: producto.categoria_id.toString(),
+                                            }));
+                                            setProductos([producto]); 
+                                        })
+                                        .catch((error) => {
+                                            console.error('Producto no encontrado:', error);
+                                            setProductos([]);
+                                        });
+                                }}
+                            >
+                                Consultar existencia
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+                <Label className="px-4 text-lg font-semibold">Categoria</Label>
+                <div className="mt-4 flex flex-wrap justify-center">
+                    {categorias.map((cat) => (
+                        <Button
+                            key={cat.categoria_id}
+                            variant={formData.categoria_id === cat.categoria_id ? 'default' : 'outline'}
+                            className={`w-64 justify-center text-sm ${formData.categoria_id === cat.categoria_id ? 'border-blue-500 bg-blue-100 text-blue-700' : ''}`}
+                            onClick={() => {
+                                setFormData({ ...formData, categoria_id: cat.categoria_id });
+                                axios
+                                    .get(`/inventario/productos/${cat.categoria_id}`)
+                                    .then((response) => {
+                                        setProductos(response.data.productos);
+                                    })
+                                    .catch((error) => {
+                                        console.error('Error al obtener los productos:', error);
+                                    });
+                            }}
+                        >
+                            {cat.nombre}
+                        </Button>
+                    ))}
+                </div>
+
+                <div className="mt-6">
+                    <Label className="text-lg font-semibold">Productos de esta categoría</Label>
+                    <table className="mt-2 w-full border">
+                        <thead>
+                            <tr className="bg-zinc-100 dark:bg-zinc-800">
+                                <th className="border px-4 py-2">Nombre</th>
+                                <th className="border px-4 py-2">Código</th>
+                                <th className="border px-4 py-2">Stock</th>
+                                <th className="border px-4 py-2">Precio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {productos.map((prod) => (
+                                <tr key={prod.id || prod.producto_id}>
+                                    <td className="border px-4 py-2">{prod.nombre}</td>
+                                    <td className="border px-4 py-2">{prod.codigo}</td>
+                                    <td className="border px-4 py-2">{prod.stock}</td>
+                                    <td className="border px-4 py-2">${prod.precio_actual}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 };
