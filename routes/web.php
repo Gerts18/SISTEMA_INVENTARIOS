@@ -8,9 +8,6 @@ use App\Http\Controllers\Inventarios\InventariosController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Reportes\ReportesController;
 
-//Ruta general
-// web.php (temporalmente para pruebas)
-Route::get('/test/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
 
 Route::get('/', function () {
     if (Auth::check()) {

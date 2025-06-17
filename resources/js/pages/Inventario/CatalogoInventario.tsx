@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { router } from '@inertiajs/react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const CatalogoInventario = () => {
@@ -86,12 +86,13 @@ const CatalogoInventario = () => {
                 console.log('Producto creado exitosamente');
                 setOpen(false);
                 setSuccess(true);
+                const categoriaSeleccionada = formData.categoria_id;
                 setFormData({
                     nombre: '',
                     codigo: '',
                     stock: 0,
                     precio_actual: '',
-                    categoria_id: '',
+                    categoria_id: categoriaSeleccionada,
                 });
                 setTimeout(() => setSuccess(false), 3000);
             },
@@ -217,7 +218,7 @@ const CatalogoInventario = () => {
                                                 ...prev,
                                                 categoria_id: producto.categoria_id.toString(),
                                             }));
-                                            setProductos([producto]); 
+                                            setProductos([producto]);
                                         })
                                         .catch((error) => {
                                             console.error('Producto no encontrado:', error);
@@ -255,7 +256,28 @@ const CatalogoInventario = () => {
                 </div>
 
                 <div className="mt-6">
-                    <Label className="text-lg font-semibold">Productos de esta categoría</Label>
+                    <Label className="text-lg font-semibold">
+                        <span>Productos de esta categoría </span>
+                        <button
+                            className="ml-2 align-middle text-black hover:text-gray-700 focus:outline-none"
+                            onClick={() => {
+                                if (formData.categoria_id) {
+                                    axios
+                                        .get(`/inventario/productos/${formData.categoria_id}`)
+                                        .then((response) => {
+                                            setProductos(response.data.productos);
+                                        })
+                                        .catch((error) => {
+                                            console.error('Error al obtener los productos:', error);
+                                        });
+                                } else {
+                                    console.log('Selecciona una categoría para actualizar los productos.');
+                                }
+                            }}
+                        >
+                            <RefreshCcw className="inline h-10 w-4 align-middle" />
+                        </button>
+                    </Label>
                     <table className="mt-2 w-full border">
                         <thead>
                             <tr className="bg-zinc-100 dark:bg-zinc-800">
