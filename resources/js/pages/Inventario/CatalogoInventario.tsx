@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 const CatalogoInventario = () => {
     const [categorias, setCategorias] = useState<{ categoria_id: string; nombre: string }[]>([]);
     const [open, setOpen] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     const [productoId, setProductoId] = useState('');
@@ -60,15 +61,15 @@ const CatalogoInventario = () => {
 
         try {
             if (!payload.nombre || !payload.codigo || !payload.categoria_id || !payload.precio_actual) {
-                setError('Todos los campos son obligatorios.');
+                setFormError('Todos los campos son obligatorios.');
                 return;
             }
         } catch (error) {
-            setError('Error de validación. Por favor, revisa los datos ingresados.');
+            setFormError('Error de validación. Por favor, revisa los datos ingresados.');
             return;
         }
 
-        setError(null);
+        setFormError(null);
 
         router.post(route('inventario.store'), payload, {
             onError: (errors) => {
@@ -80,7 +81,7 @@ const CatalogoInventario = () => {
                     errorMessage = String(errors);
                 }
 
-                setError(` ${errorMessage}`);
+                setFormError(` ${errorMessage}`);
             },
             onSuccess: () => {
                 console.log('Producto creado exitosamente');
@@ -121,10 +122,10 @@ const CatalogoInventario = () => {
                         <DialogDescription>Complete los campos del formulario para registrar un nuevo producto.</DialogDescription>
                     </DialogHeader>
 
-                    {error && (
+                    {formError && (
                         <Alert variant="destructive" className="mb-4">
                             <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
+                            <AlertDescription>{formError}</AlertDescription>
                         </Alert>
                     )}
                     <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
@@ -193,10 +194,32 @@ const CatalogoInventario = () => {
                         <Label className="text-lg font-semibold" htmlFor="numero_producto">
                             Existencia
                         </Label>
+                        {error && (
+                            <div
+                                style={{
+                                    animation: 'fadeInOut 3s forwards',
+                                }}
+                                onAnimationEnd={() => setError(null)}
+                            >
+                                <Alert variant="destructive" className="mb-4">
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
+                                <style>
+                                    {`
+                                    @keyframes fadeInOut {
+                                        0% { opacity: 0; }
+                                        10% { opacity: 1; }
+                                        90% { opacity: 1; }
+                                        100% { opacity: 0; }
+                                    }
+                                    `}
+                                </style>
+                            </div>
+                        )}
                         <div className="mt-2 flex items-center gap-2">
                             <Input
                                 id="producto_id"
-                                type="number"
                                 placeholder="Número de producto"
                                 min={1}
                                 className="w-48"
@@ -237,7 +260,7 @@ const CatalogoInventario = () => {
                         <Button
                             key={cat.categoria_id}
                             variant={formData.categoria_id === cat.categoria_id ? 'default' : 'outline'}
-                            className={`w-64 justify-center text-sm ${formData.categoria_id === cat.categoria_id ? 'border-blue-500 bg-blue-100 text-blue-700' : ''}`}
+                            className={`w-64 justify-center text-sm`}
                             onClick={() => {
                                 setFormData({ ...formData, categoria_id: cat.categoria_id });
                                 axios
