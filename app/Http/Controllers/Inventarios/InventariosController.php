@@ -37,12 +37,17 @@ class InventariosController extends Controller
     public function productosPorCategoria($categoria_id)
     {
         $productos = Producto::where('categoria_id', $categoria_id)
-            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual') // ajusta si quieres más/menos campos
-            ->get();
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual') 
+            ->simplePaginate(10); 
         
         return response()->json([
-            'productos' => $productos,
-        ]);
+            'productos' => $productos->items(), 
+            'pagination' => [
+                'next_page' => $productos->nextPageUrl(),
+                'prev_page' => $productos->previousPageUrl(),
+                'current_page' => $productos->currentPage()
+        ]
+    ]);
     }
     
     public function catalogo(){

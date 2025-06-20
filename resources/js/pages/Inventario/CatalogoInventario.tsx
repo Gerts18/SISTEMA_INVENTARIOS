@@ -16,6 +16,11 @@ const CatalogoInventario = () => {
     const [open, setOpen] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [paginationInfo, setPaginationInfo] = useState({
+        nextPageUrl: null as string | null,
+        prevPageUrl: null as string | null,
+        currentPage: 1,
+    });
     const [success, setSuccess] = useState(false);
     const [productoId, setProductoId] = useState('');
     type Producto = {
@@ -267,6 +272,12 @@ const CatalogoInventario = () => {
                                     .get(`/inventario/productos/${cat.categoria_id}`)
                                     .then((response) => {
                                         setProductos(response.data.productos);
+                                        setPaginationInfo({
+                                                nextPageUrl: response.data.pagination.next_page,
+                                                prevPageUrl: response.data.pagination.prev_page,
+                                                currentPage: response.data.pagination.current_page,
+                                            });
+                                            console.log('Productos actualizados:', response);
                                     })
                                     .catch((error) => {
                                         console.error('Error al obtener los productos:', error);
@@ -289,6 +300,12 @@ const CatalogoInventario = () => {
                                         .get(`/inventario/productos/${formData.categoria_id}`)
                                         .then((response) => {
                                             setProductos(response.data.productos);
+                                            setPaginationInfo({
+                                                nextPageUrl: response.data.pagination.next_page,
+                                                prevPageUrl: response.data.pagination.prev_page,
+                                                currentPage: response.data.pagination.current_page,
+                                            });
+                                            console.log('Productos actualizados:', response);
                                         })
                                         .catch((error) => {
                                             console.error('Error al obtener los productos:', error);
@@ -300,6 +317,43 @@ const CatalogoInventario = () => {
                         >
                             <RefreshCcw className="inline h-10 w-4 align-middle" />
                         </button>
+                        <div className="mt-4 flex justify-between">
+                            <Button
+                                disabled={!paginationInfo.prevPageUrl}
+                                onClick={() => {
+                                    if (paginationInfo.prevPageUrl) {
+                                        axios.get(paginationInfo.prevPageUrl).then((response) => {
+                                            setProductos(response.data.productos); // ✅ Array
+                                            setPaginationInfo({
+                                                nextPageUrl: response.data.pagination.next_page,
+                                                prevPageUrl: response.data.pagination.prev_page,
+                                                currentPage: response.data.pagination.current_page,
+                                            });
+                                        });
+                                    }
+                                }}
+                            >
+                                Anterior
+                            </Button>
+                            <span>Página {paginationInfo.currentPage}</span>
+                            <Button
+                                disabled={!paginationInfo.nextPageUrl}
+                                onClick={() => {
+                                    if (paginationInfo.nextPageUrl) {
+                                        axios.get(paginationInfo.nextPageUrl).then((response) => {
+                                            setProductos(response.data.productos); // ✅ Array
+                                            setPaginationInfo({
+                                                nextPageUrl: response.data.pagination.next_page,
+                                                prevPageUrl: response.data.pagination.prev_page,
+                                                currentPage: response.data.pagination.current_page,
+                                            });
+                                        });
+                                    }
+                                }}
+                            >
+                                Siguiente
+                            </Button>
+                        </div>
                     </Label>
                     <table className="mt-2 w-full border">
                         <thead>
