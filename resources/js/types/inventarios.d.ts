@@ -9,4 +9,5 @@ export interface Producto {
 
 export interface ProductoLista extends Producto {
     cantidadEntrada: number;
+    proveedor_nombre?: string;
 }

@@ -24,13 +24,17 @@ class GestionesController extends Controller
 
     public function productoExistencia($codigo)
     {
-        $producto = Producto::with('categoria')
+        $producto = Producto::with(['proveedor.categoria'])
             ->where('codigo', $codigo)
             ->first();
 
         if (!$producto) {
             return response()->json(['found' => false]);
         }
+
+        $proveedor = $producto->proveedor;
+        $categoria = $proveedor && $proveedor->categoria ? $proveedor->categoria->nombre : '';
+        $proveedorNombre = $proveedor ? $proveedor->nombre : '';
 
         return response()->json([
             'found' => true,
@@ -40,7 +44,9 @@ class GestionesController extends Controller
                 'codigo' => $producto->codigo,
                 'stock' => $producto->stock,
                 'precio_actual' => $producto->precio_actual,
-                'categoria' => $producto->categoria ? $producto->categoria->nombre : '',
+                'categoria' => $categoria,
+                'proveedor_nombre' => $proveedorNombre,
+                'proveedor_categoria' => $categoria,
             ]
         ]);
     }

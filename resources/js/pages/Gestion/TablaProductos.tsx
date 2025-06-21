@@ -34,6 +34,7 @@ const TablaProductos = ({
                   <th className="px-2 py-1 border hidden sm:table-cell">Código</th>
                   <th className="px-2 py-1 border hidden md:table-cell">Cantidad disponible</th>
                   <th className="px-2 py-1 border hidden md:table-cell">Precio</th>
+                  <th className="px-2 py-1 border">Proveedor</th>
                   <th className="px-2 py-1 border">{columnaCantidad}</th>
                   <th className="px-2 py-1 border"></th>
                 </tr>
@@ -45,6 +46,7 @@ const TablaProductos = ({
                     <td className="px-2 py-1 border hidden sm:table-cell">{prod.codigo}</td>
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.stock}</td>
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.precio_actual ?? '-'}</td>
+                    <td className="px-2 py-1 border">{prod.proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
                       <div className="flex items-center gap-2">
                         <Input
@@ -100,6 +102,9 @@ const TablaProductos = ({
                   </div>
                   <div>
                     <span className="font-medium">Precio:</span> {prod.precio_actual ?? '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Proveedor:</span> {prod.proveedor_nombre ?? '-'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
