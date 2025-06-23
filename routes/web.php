@@ -46,6 +46,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/producto-existencia/{codigo}', [GestionesController::class, 'productoExistencia']);
 
         Route::post('/registrar', [GestionesController::class, 'registrarGestion']);
+        
+        Route::post('/subir-comprobante', [GestionesController::class, 'subirArchivoComprobante'])->name('gestion.subir-comprobante');
     });
 
     //Reportes de inventario
