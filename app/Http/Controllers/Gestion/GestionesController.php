@@ -11,6 +11,8 @@ use App\Models\Gestion\GestionInventario;
 use App\Models\Gestion\CambioProducto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GestionesController extends Controller
 {
@@ -18,19 +20,23 @@ class GestionesController extends Controller
     {
         return Inertia::render(
             'Gestion/GestionPage',
-            [ ]
+            []
         );
     }
 
     public function productoExistencia($codigo)
     {
-        $producto = Producto::with('categoria')
+        $producto = Producto::with(['proveedor.categoria'])
             ->where('codigo', $codigo)
             ->first();
 
         if (!$producto) {
             return response()->json(['found' => false]);
         }
+
+        $proveedor = $producto->proveedor;
+        $categoria = $proveedor && $proveedor->categoria ? $proveedor->categoria->nombre : '';
+        $proveedorNombre = $proveedor ? $proveedor->nombre : '';
 
         return response()->json([
             'found' => true,
@@ -40,7 +46,9 @@ class GestionesController extends Controller
                 'codigo' => $producto->codigo,
                 'stock' => $producto->stock,
                 'precio_actual' => $producto->precio_actual,
-                'categoria' => $producto->categoria ? $producto->categoria->nombre : '',
+                'categoria' => $categoria,
+                'proveedor_nombre' => $proveedorNombre,
+                'proveedor_categoria' => $categoria,
             ]
         ]);
     }
@@ -98,6 +106,30 @@ class GestionesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function subirArchivoComprobante(Request $request)
+    {
+        if ($request->hasFile('comprobante')) {
+
+            $filename = $request->file('comprobante')->getClientOriginalName();
+
+            $result = Storage::disk('s3')->put('comprobantes/' . $filename, file_get_contents($request->file('comprobante')), 'public');
+
+            Log::info('S3 upload result', ['result' => $result, 'filename' => $filename]);
+
+            if (!$result) {
+                return response()->json(['success' => false, 'message' => 'Error al subir el archivo a S3'], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Archivo subido correctamente',
+                'filename' => $filename,
+            ]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'No se ha recibido ningún archivo'], 400);
         }
     }
 }

@@ -17,10 +17,13 @@ return new class extends Migration
             $table->string('codigo',6)->unique();
             $table->unsignedInteger('stock')->default(0);
             $table->decimal('precio_actual',10,2)->unsigned();
-            $table->unsignedInteger('categoria_id');
+            $table->unsignedInteger('proveedor_id');
             $table->timestamps();
 
-            $table->foreign('categoria_id')->references('categoria_id')->on('categorias_productos')->onDelete('cascade');
+            $table->foreign('proveedor_id')
+                ->references('proveedor_id')
+                ->on('proveedores')
+                ->onDelete('set null');
         });
     }
 

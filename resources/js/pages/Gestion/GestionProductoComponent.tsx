@@ -27,13 +27,14 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         setLista([])
     }, [tipo])
 
-    // Agrupa productos por categoría
+    // Agrupa productos por categoría (ahora usando proveedor.categoria)
     const productosPorCategoria = useMemo(() => {
         const grupos: { [categoria: string]: any[] } = {};
         lista.forEach(prod => {
-            const cat = prod.categoria || "Sin categoría";
-            if (!grupos[cat]) grupos[cat] = [];
-            grupos[cat].push(prod);
+            // Obtener la categoría desde el proveedor
+            const categoria = prod.proveedor_categoria || prod.categoria || "Sin categoría";
+            if (!grupos[categoria]) grupos[categoria] = [];
+            grupos[categoria].push(prod);
         });
         return grupos;
     }, [lista]);

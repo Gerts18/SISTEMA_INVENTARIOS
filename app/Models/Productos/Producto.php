@@ -3,6 +3,7 @@
 namespace App\Models\Productos;
 
 use App\Models\Gestion\GestionInventario;
+use App\Models\Proveedores\Proveedor;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
@@ -16,7 +17,7 @@ class Producto extends Model
         'codigo',
         'stock',
         'precio_actual',
-        'categoria_id'
+        'proveedor_id',
     ];
 
     public static $rules = [
@@ -24,17 +25,12 @@ class Producto extends Model
         'codigo' => 'required|string|max:6|unique:productos,codigo',
         'stock' => 'integer|min:0',
         'precio_actual' => 'required|numeric|min:0',
-        'categoria_id' => 'required|exists:categorias_productos,categoria_id',
+        'proveedor_id' => 'required|exists:proveedores,proveedor_id',
     ];
 
     public static $rules_update = [
         'stock' => 'required|integer|min:0', 
     ];
-
-    public function categoria()
-    {
-        return $this->belongsTo(CategoriaProducto::class, 'categoria_id', 'categoria_id');
-    }
 
     public function preciosHistorial()
     {
@@ -46,5 +42,9 @@ class Producto extends Model
         return $this->hasMany(GestionInventario::class, 'producto_id', 'producto_id');
     }
 
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class, 'proveedor_id', 'proveedor_id');
+    }
     
 }

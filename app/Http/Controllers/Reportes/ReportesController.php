@@ -14,7 +14,7 @@ class ReportesController extends Controller
     public function show()
     {
         $gestiones = GestionInventario::with([
-            'usuario.roles', // Asumiendo relación roles en User
+            'usuario.roles',
             'cambiosProducto.producto'
         ])->orderBy('fecha', 'desc')->get();
 
