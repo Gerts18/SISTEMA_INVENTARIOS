@@ -45,7 +45,9 @@ const TablaProductos = ({
                     <td className="px-2 py-1 border">{prod.nombre}</td>
                     <td className="px-2 py-1 border hidden sm:table-cell">{prod.codigo}</td>
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.stock}</td>
-                    <td className="px-2 py-1 border hidden md:table-cell">{prod.precio_actual ?? '-'}</td>
+                    <td className="px-2 py-1 border hidden md:table-cell">
+                      {prod.precio_actual != null ? `$${prod.precio_actual} c/u` : '-'}
+                    </td>
                     <td className="px-2 py-1 border">{prod.proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
                       <div className="flex items-center gap-2">

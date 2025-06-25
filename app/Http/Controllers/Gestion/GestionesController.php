@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 use Aws\S3\S3Client;
+use Illuminate\Support\Facades\Log;
 
 class GestionesController extends Controller
 {
@@ -58,14 +59,17 @@ class GestionesController extends Controller
     {
         $request->validate([
             'tipo' => 'required|in:Entrada,Salida',
-            'productos' => 'required|array|min:1',
-            'productos.*.codigo' => 'required|string|exists:productos,codigo',
-            'productos.*.cantidadEntrada' => 'required|integer|min:1',
+            'productos' => 'required|string', // Now it's JSON string
+            'comprobante' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx|max:10240',
         ]);
 
         $usuarioId = Auth::id();
         $tipo = $request->input('tipo');
-        $productos = $request->input('productos');
+        $productos = json_decode($request->input('productos'), true);
+
+        if (!$productos || !is_array($productos)) {
+            return response()->json(['success' => false, 'message' => 'Productos inválidos'], 400);
+        }
 
         DB::beginTransaction();
         try {
@@ -73,9 +77,10 @@ class GestionesController extends Controller
                 'usuario_id' => $usuarioId,
                 'fecha' => now(),
                 'tipo_gestion' => $tipo,
-                // 'imagen_comprobante' => null, // Si aplica
+                'imagen_comprobante' => null, // Will be updated if file is uploaded
             ]);
 
+            // Process products
             foreach ($productos as $prod) {
                 $producto = Producto::where('codigo', $prod['codigo'])->lockForUpdate()->first();
                 if (!$producto) {
@@ -102,6 +107,52 @@ class GestionesController extends Controller
                 ]);
             }
 
+            // Handle file upload if present
+            if ($request->hasFile('comprobante')) {
+                $file = $request->file('comprobante');
+                $fecha = now()->format('Y-m-d_H-i-s');
+                $fileName = "gestion_{$gestion->gestion_inv_id}_{$fecha}." . $file->getClientOriginalExtension();
+                
+                try {
+                    $s3 = new S3Client([
+                        'version' => 'latest',
+                        'region' => env('AWS_DEFAULT_REGION'),
+                        'credentials' => [
+                            'key' => env('AWS_ACCESS_KEY_ID'),
+                            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                        ],
+                        'http' => [
+                            'verify' => env('APP_ENV') === 'local' ? false : true
+                        ]
+                    ]);
+
+                    $result = $s3->putObject([
+                        'Bucket' => env('AWS_BUCKET'),
+                        'Key' => 'comprobantes/' . $fileName,
+                        'Body' => fopen($file->getPathname(), 'r'),
+                        'ContentType' => $file->getMimeType(),
+                        'ContentDisposition' => 'inline',
+                        'CacheControl' => 'max-age=31536000',
+                    ]);
+
+                    // Generate public URL
+                    $publicUrl = sprintf(
+                        'https://%s.s3.%s.amazonaws.com/%s',
+                        env('AWS_BUCKET'),
+                        env('AWS_DEFAULT_REGION'),
+                        'comprobantes/' . $fileName
+                    );
+
+                    // Update the management record with the file URL
+                    $gestion->update(['imagen_comprobante' => $publicUrl]);
+
+                } catch (\Exception $e) {
+                    // If file upload fails, still proceed with the management registration
+                    // but log the error
+                    Log::error('Error uploading file for management ' . $gestion->gestion_inv_id . ': ' . $e->getMessage());
+                }
+            }
+
             DB::commit();
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
@@ -118,6 +169,11 @@ class GestionesController extends Controller
 
         try {
             $file = $request->file('comprobante');
+            
+            // Generate unique filename to avoid conflicts
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $mimeType = $file->getMimeType();
+
             $s3 = new S3Client([
                 'version' => 'latest',
                 'region' => env('AWS_DEFAULT_REGION'),
@@ -126,21 +182,34 @@ class GestionesController extends Controller
                     'secret' => env('AWS_SECRET_ACCESS_KEY'),
                 ],
                 'http' => [
-                    'verify' => false // ⚠️ Solo para desarrollo local
+                    'verify' => env('APP_ENV') === 'local' 
+                            ? false
+                            : true
                 ]
             ]);
 
             $result = $s3->putObject([
                 'Bucket' => env('AWS_BUCKET'),
-                'Key' => 'comprobantes/' . $file->getClientOriginalName(),
+                'Key' => 'comprobantes/' . $fileName,
                 'Body' => fopen($file->getPathname(), 'r'),
-                'ACL' => 'private',
+                'ContentType' => $mimeType,
+                'ContentDisposition' => 'inline',
+                'CacheControl' => 'max-age=31536000',
             ]);
+
+            // Generate public URL
+            $publicUrl = sprintf(
+                'https://%s.s3.%s.amazonaws.com/%s',
+                env('AWS_BUCKET'),
+                env('AWS_DEFAULT_REGION'),
+                'comprobantes/' . $fileName
+            );
 
             return response()->json([
                 'success' => true,
-                'url' => $result->get('ObjectURL')
+                'url' => $publicUrl
             ]);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

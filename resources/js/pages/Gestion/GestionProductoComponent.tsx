@@ -1,8 +1,11 @@
 import { useState, useMemo, useEffect } from "react"
 import ConsultaExistencia from "./ConsultaExistencia"
 import TablaProductos from "./TablaProductos"
+import FileUpload from "@/components/Files/FileUpload"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -18,13 +21,15 @@ import {
 const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }: any) => {
     // Estado para la lista de productos agregados
     const [lista, setLista] = useState<any[]>([])
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [loading, setLoading] = useState(false)
-    const [alerta, setAlerta] = useState<{ visible: boolean, mensaje: string, tipo: "success" | "error" }>({ visible: false, mensaje: "", tipo: "success" })
+    const [alerta, setAlerta] = useState<{ visible: boolean, mensaje: string, tipo: "success" | "error" | "warning" }>({ visible: false, mensaje: "", tipo: "success" })
     const [openDialog, setOpenDialog] = useState(false)
 
     // Reinicia la lista si cambia el tipo
     useEffect(() => {
         setLista([])
+        setSelectedFile(null)
     }, [tipo])
 
     // Agrupa productos por categoría (ahora usando proveedor.categoria)
@@ -74,23 +79,69 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         setLista(lista => lista.filter(p => p.codigo !== codigo));
     };
 
+    // Validar antes de abrir el diálogo
+    const handleContinuarClick = () => {
+        if (!selectedFile) {
+            setAlerta({ 
+                visible: true, 
+                mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
+                tipo: "warning" 
+            })
+
+            return false
+        }
+        setAlerta({ visible: false, mensaje: "", tipo: "success" })
+        return true
+    }
+
     // Confirmación y registro
     const handleRegistrar = async () => {
         setLoading(true)
         setAlerta({ visible: false, mensaje: "", tipo: "success" })
+        
         try {
-            const res = await axios.post("/gestion/registrar", {
-                tipo,
-                productos: lista.map(({ cantidadEntrada, codigo }) => ({ cantidadEntrada, codigo }))
+            // Crear FormData para enviar archivo junto con datos
+            const formData = new FormData()
+            formData.append('tipo', tipo)
+            formData.append('productos', JSON.stringify(lista.map(({ cantidadEntrada, codigo }) => ({ cantidadEntrada, codigo }))))
+
+            if (selectedFile) {
+                formData.append('comprobante', selectedFile)
+            }
+
+            const res = await axios.post("/gestion/registrar", formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             })
+
             if (res.data.success) {
-                setAlerta({ visible: true, mensaje: "¡Gestión registrada exitosamente!", tipo: "success" })
+                setAlerta({ 
+                    visible: true, 
+                    mensaje: "¡Gestión registrada exitosamente! El comprobante ha sido guardado correctamente.", 
+                    tipo: "success" 
+                })
                 setLista([])
+                setSelectedFile(null)
+                
+                // Auto-hide success message after 5 seconds
+                setTimeout(() => {
+                    setAlerta({ visible: false, mensaje: "", tipo: "success" })
+                }, 5000)
             } else {
-                setAlerta({ visible: true, mensaje: res.data.message || "Error al registrar gestión", tipo: "error" })
+                setAlerta({ 
+                    visible: true, 
+                    mensaje: res.data.message || "Error al registrar gestión", 
+                    tipo: "error" 
+                })
             }
         } catch (e: any) {
-            setAlerta({ visible: true, mensaje: e.response?.data?.message || "Error inesperado", tipo: "error" })
+            const errorMessage = e.response?.data?.message || e.message || "Error inesperado al procesar la solicitud"
+            setAlerta({ 
+                visible: true, 
+                mensaje: `Error: ${errorMessage}`, 
+                tipo: "error" 
+            })
         } finally {
             setLoading(false)
             setOpenDialog(false)
@@ -118,13 +169,72 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                 />
             </div>
 
+            {/* Componente de carga de archivo */}
+            {lista.length > 0 && (
+                <div className="mt-6">
+                    <FileUpload
+                        onFileSelect={setSelectedFile}
+                        selectedFile={selectedFile}
+                    />
+                </div>
+            )}
+
+            {/* Mostrar alertas */}
+            {alerta.visible && (
+                <Alert className={`
+                    ${alerta.tipo === 'success' ? 'border-green-200 bg-green-50' : ''}
+                    ${alerta.tipo === 'error' ? 'border-red-200 bg-red-50' : ''}
+                    ${alerta.tipo === 'warning' ? 'border-yellow-200 bg-yellow-50' : ''}
+                `}>
+                    {alerta.tipo === 'success' && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                    {alerta.tipo === 'error' && <XCircle className="h-4 w-4 text-red-600" />}
+                    {alerta.tipo === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-600" />}
+                    <AlertDescription className={`
+                        ${alerta.tipo === 'success' ? 'text-green-800' : ''}
+                        ${alerta.tipo === 'error' ? 'text-red-800' : ''}
+                        ${alerta.tipo === 'warning' ? 'text-yellow-800' : ''}
+                    `}>
+                        {alerta.mensaje}
+                    </AlertDescription>
+                </Alert>
+            )}
+
             {/* Botón continuar y alerta */}
             {lista.length > 0 && (
                 <div className="flex flex-col items-end mt-6 gap-2">
-                    <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
+                    <AlertDialog 
+                        open={openDialog} 
+                        onOpenChange={(open) => {
+                            if (open && !selectedFile) {
+                                setAlerta({ 
+                                    visible: true, 
+                                    mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
+                                    tipo: "warning" 
+                                })
+                                return
+                            }
+                            setOpenDialog(open)
+                        }}
+                    >
                         <AlertDialogTrigger asChild>
                             <Button
-                                disabled={loading}
+                                disabled={loading || !selectedFile}
+                                variant={!selectedFile ? "secondary" : "default"}
+                                className={`
+                                    ${!selectedFile ? 'cursor-not-allowed opacity-50' : ''}
+                                `}
+                                onClick={(e) => {
+                                    if (!selectedFile) {
+                                        e.preventDefault()
+                                        setAlerta({ 
+                                            visible: true, 
+                                            mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
+                                            tipo: "warning" 
+                                        })
+                                        return
+                                    }
+                                    setAlerta({ visible: false, mensaje: "", tipo: "success" })
+                                }}
                             >
                                 {loading ? "Registrando..." : "Continuar"}
                             </Button>
@@ -134,6 +244,11 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                 <AlertDialogTitle>¿Está seguro de registrar esta gestión?</AlertDialogTitle>
                                 <AlertDialogDescription>
                                     Esta acción no se puede deshacer. Se actualizará el stock y se guardará el registro.
+                                    {selectedFile && (
+                                        <span className="block mt-2 text-sm font-medium">
+                                            Se incluirá el archivo: {selectedFile.name}
+                                        </span>
+                                    )}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

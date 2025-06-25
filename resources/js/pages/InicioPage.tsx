@@ -1,7 +1,5 @@
-import FileUpload from '@/components/Files/FileUpload';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
 
@@ -23,7 +21,7 @@ export default function InicioPage() {
                     </div>
                 </div>
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
-                    <FileUpload/>
+     
                     
                 </div>
             </div>
