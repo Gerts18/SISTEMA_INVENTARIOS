@@ -16,6 +16,7 @@ export interface Gestion  {
     tipo_gestion: string
     fecha: string
     cambios_producto: CambioProducto[]
+    imagen_comprobante?: string
 }
 
 export interface Props  {

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Minus, Plus } from "lucide-react"
 
 import { ProductoLista } from "@/types/inventarios"
 
@@ -19,6 +19,25 @@ const TablaProductos = ({
   // Nombre de columna según tipo
   const columnaCantidad =
     tipo === "Salida" ? "Cantidad a retirar" : "Cantidad a ingresar"
+
+  // Función para incrementar cantidad
+  const handleIncrement = (codigo: string, currentValue: number, maxStock?: number) => {
+    let newValue = currentValue + 1
+    if (tipo === "Salida" && maxStock !== undefined) {
+      newValue = Math.min(newValue, maxStock)
+    }
+    onCantidadEntrada(codigo, newValue)
+  }
+
+  // Función para decrementar cantidad
+  const handleDecrement = (codigo: string, currentValue: number, stock: number) => {
+    if (tipo === "Salida" && stock <= 0) {
+      onCantidadEntrada(codigo, 0)
+      return
+    }
+    const newValue = Math.max(1, currentValue - 1)
+    onCantidadEntrada(codigo, newValue)
+  }
 
   return (
     <div>
@@ -50,32 +69,33 @@ const TablaProductos = ({
                     </td>
                     <td className="px-2 py-1 border">{prod.proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min={tipo === "Salida" && prod.stock <= 0 ? 0 : 1}
-                          max={tipo === "Salida" ? prod.stock : undefined}
-                          value={
-                            tipo === "Salida" && prod.stock <= 0
-                              ? 0
-                              : prod.cantidadEntrada
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            tipo === "Salida" && prod.stock <= 0 ||
+                            prod.cantidadEntrada <= 1
                           }
-                          disabled={tipo === "Salida" && prod.stock <= 0}
-                          onChange={e => {
-                            let val = parseInt(e.target.value, 10) || 1
-                            if (tipo === "Salida") {
-                              if (prod.stock <= 0) {
-                                onCantidadEntrada(prod.codigo, 0)
-                                return
-                              }
-                              val = Math.max(1, Math.min(val, prod.stock))
-                            } else {
-                              val = Math.max(1, val)
-                            }
-                            onCantidadEntrada(prod.codigo, val)
-                          }}
-                          className="w-24"
-                        />
+                          onClick={() => handleDecrement(prod.codigo, prod.cantidadEntrada, prod.stock)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="mx-2 min-w-[2rem] text-center font-medium">
+                          {tipo === "Salida" && prod.stock <= 0 ? 0 : prod.cantidadEntrada}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={
+                            tipo === "Salida" && (prod.stock <= 0 || prod.cantidadEntrada >= prod.stock)
+                          }
+                          onClick={() => handleIncrement(prod.codigo, prod.cantidadEntrada, prod.stock)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
                     <td className="px-2 py-1 border">
@@ -111,31 +131,34 @@ const TablaProductos = ({
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-medium">{columnaCantidad}:</span>
-                  <Input
-                    type="number"
-                    min={tipo === "Salida" && prod.stock <= 0 ? 0 : 1}
-                    max={tipo === "Salida" ? prod.stock : undefined}
-                    value={
-                      tipo === "Salida" && prod.stock <= 0
-                        ? 0
-                        : prod.cantidadEntrada
-                    }
-                    disabled={tipo === "Salida" && prod.stock <= 0}
-                    onChange={e => {
-                      let val = parseInt(e.target.value, 10) || 1
-                      if (tipo === "Salida") {
-                        if (prod.stock <= 0) {
-                          onCantidadEntrada(prod.codigo, 0)
-                          return
-                        }
-                        val = Math.max(1, Math.min(val, prod.stock))
-                      } else {
-                        val = Math.max(1, val)
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        tipo === "Salida" && prod.stock <= 0 ||
+                        prod.cantidadEntrada <= 1
                       }
-                      onCantidadEntrada(prod.codigo, val)
-                    }}
-                    className="w-20"
-                  />
+                      onClick={() => handleDecrement(prod.codigo, prod.cantidadEntrada, prod.stock)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="mx-2 min-w-[2rem] text-center font-medium">
+                      {tipo === "Salida" && prod.stock <= 0 ? 0 : prod.cantidadEntrada}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={
+                        tipo === "Salida" && (prod.stock <= 0 || prod.cantidadEntrada >= prod.stock)
+                      }
+                      onClick={() => handleIncrement(prod.codigo, prod.cantidadEntrada, prod.stock)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <Button
                   variant="destructive"
