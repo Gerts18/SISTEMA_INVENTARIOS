@@ -11,8 +11,9 @@ use App\Models\Gestion\GestionInventario;
 use App\Models\Gestion\CambioProducto;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+
+use Aws\S3\S3Client;
 
 class GestionesController extends Controller
 {
@@ -111,25 +112,40 @@ class GestionesController extends Controller
 
     public function subirArchivoComprobante(Request $request)
     {
-        if ($request->hasFile('comprobante')) {
+        if (!$request->hasFile('comprobante')) {
+            return response()->json(['success' => false], 400);
+        }
 
-            $filename = $request->file('comprobante')->getClientOriginalName();
+        try {
+            $file = $request->file('comprobante');
+            $s3 = new S3Client([
+                'version' => 'latest',
+                'region' => env('AWS_DEFAULT_REGION'),
+                'credentials' => [
+                    'key' => env('AWS_ACCESS_KEY_ID'),
+                    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                ],
+                'http' => [
+                    'verify' => false // ⚠️ Solo para desarrollo local
+                ]
+            ]);
 
-            $result = Storage::disk('s3')->put('comprobantes/' . $filename, file_get_contents($request->file('comprobante')), 'public');
-
-            Log::info('S3 upload result', ['result' => $result, 'filename' => $filename]);
-
-            if (!$result) {
-                return response()->json(['success' => false, 'message' => 'Error al subir el archivo a S3'], 500);
-            }
+            $result = $s3->putObject([
+                'Bucket' => env('AWS_BUCKET'),
+                'Key' => 'comprobantes/' . $file->getClientOriginalName(),
+                'Body' => fopen($file->getPathname(), 'r'),
+                'ACL' => 'private',
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Archivo subido correctamente',
-                'filename' => $filename,
+                'url' => $result->get('ObjectURL')
             ]);
-        } else {
-            return response()->json(['success' => false, 'message' => 'No se ha recibido ningún archivo'], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage() // Esto revelará el error real
+            ], 500);
         }
     }
 }

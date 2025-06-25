@@ -1,31 +1,34 @@
-import { useState } from "react";
-
 import { useForm } from '@inertiajs/react'
 
 const FileUpload = () => {
 
-    const [file, setFile] = useState<any>(null)
-
     const { data, setData, post, progress } = useForm({
-        comprobante: null
+        comprobante: null,
+        _method: 'POST'
     })
 
     function submit(e: any) {
-        e.preventDefault()
+        e.preventDefault();
         post('/gestion/subir-comprobante', {
-            forceFormData: true
-        })
+            forceFormData: true,
+            onSuccess: (res) => {
+                console.log('Respuesta:', res); // Inspecciona la respuesta
+            },
+            onError: (errors) => {
+                console.error('Errores:', errors);
+            }
+        });
     }
 
     const handleFileChange = (event: any) => {
         const selectedFile = event.target.files[0]
-        setFile(selectedFile)
         console.log('Selected file:', selectedFile)
         setData('comprobante', selectedFile)
+
     }
 
     return (
-        
+
         <div>
             <form onSubmit={submit} encType="multipart/form-data">
                 <input type="file" onChange={handleFileChange} />
