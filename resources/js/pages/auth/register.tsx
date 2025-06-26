@@ -7,6 +7,7 @@ import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AuthLayout from '@/layouts/auth-layout';
 
 type RegisterForm = {
@@ -14,14 +15,25 @@ type RegisterForm = {
     email: string;
     password: string;
     password_confirmation: string;
+    role: string;
 };
 
-export default function Register() {
+interface Role {
+    id: number;
+    name: string;
+}
+
+interface RegisterProps {
+    roles: Role[];
+}
+
+export default function Register({ roles }: RegisterProps) {
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        role: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -101,18 +113,39 @@ export default function Register() {
                         <InputError message={errors.password_confirmation} />
                     </div>
 
+                    <div className="grid gap-2">
+                        <Label htmlFor="role">Rol</Label>
+                        <Select
+                            value={data.role}
+                            onValueChange={(value) => setData('role', value)}
+                            disabled={processing}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un rol" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {roles.map((role) => (
+                                    <SelectItem key={role.id} value={role.name}>
+                                        {role.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <InputError message={errors.role} />
+                    </div>
+
                     <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Crear Cuenta
                     </Button>
                 </div>
 
-                <div className="text-muted-foreground text-center text-sm">
+                {/* <div className="text-muted-foreground text-center text-sm">
                     ¿Ya tienes una cuenta?{' '}
                     <TextLink href={route('login')} tabIndex={6}>
                         Inicia Sesión
                     </TextLink>
-                </div>
+                </div> */}
             </form>
         </AuthLayout>
     );
