@@ -53,8 +53,6 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        return to_route('inicio')->with('success', 'Usuario registrado exitosamente');
+        return back()->with('success', 'Usuario registrado exitosamente');
     }
 }

@@ -1,9 +1,8 @@
-import { Head, useForm } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { LoaderCircle, CheckCircle, XCircle } from 'lucide-react';
 import { FormEventHandler } from 'react';
 
 import InputError from '@/components/input-error';
-import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,8 +26,23 @@ interface RegisterProps {
     roles: Role[];
 }
 
-export default function Register({ roles }: RegisterProps) {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+// Simple Alert component if the UI library doesn't have one
+const Alert = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div className={`rounded-lg border p-4 ${className}`}>
+        {children}
+    </div>
+);
+
+const AlertDescription = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div className={`text-sm ${className}`}>
+        {children}
+    </div>
+);
+
+export default function Register({ roles = [] }: RegisterProps) {
+    const { flash } = usePage().props as any;
+    
+    const { data, setData, post, processing, errors, reset, clearErrors } = useForm<Required<RegisterForm>>({
         name: '',
         email: '',
         password: '',
@@ -39,13 +53,42 @@ export default function Register({ roles }: RegisterProps) {
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
         post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
+            onSuccess: () => {
+                reset();
+                clearErrors();
+            },
+            onError: () => {
+                reset('password', 'password_confirmation');
+            }
         });
     };
 
     return (
         <AuthLayout title="Crea una cuenta" description="">
             <Head title="Register" />
+            
+            {flash?.success && (
+                <Alert className="mb-4 border-green-200 bg-green-50">
+                    <div className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800">
+                            {flash.success}
+                        </AlertDescription>
+                    </div>
+                </Alert>
+            )}
+
+            {flash?.error && (
+                <Alert className="mb-4 border-red-200 bg-red-50">
+                    <div className="flex items-center gap-2">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <AlertDescription className="text-red-800">
+                            {flash.error}
+                        </AlertDescription>
+                    </div>
+                </Alert>
+            )}
+
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
@@ -124,17 +167,23 @@ export default function Register({ roles }: RegisterProps) {
                                 <SelectValue placeholder="Selecciona un rol" />
                             </SelectTrigger>
                             <SelectContent>
-                                {roles.map((role) => (
-                                    <SelectItem key={role.id} value={role.name}>
-                                        {role.name}
+                                {roles && roles.length > 0 ? (
+                                    roles.map((role) => (
+                                        <SelectItem key={role.id} value={role.name}>
+                                            {role.name}
+                                        </SelectItem>
+                                    ))
+                                ) : (
+                                    <SelectItem value="" disabled>
+                                        No hay roles disponibles
                                     </SelectItem>
-                                ))}
+                                )}
                             </SelectContent>
                         </Select>
                         <InputError message={errors.role} />
                     </div>
 
-                    <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
+                    <Button type="submit" className="mt-2 w-full" tabIndex={6} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Crear Cuenta
                     </Button>
