@@ -7,6 +7,7 @@ use App\Models\Productos\Producto;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Productos\CategoriaProducto;
+use App\Models\Proveedores\Proveedor;
 
 class InventariosController extends Controller
 {
@@ -22,6 +23,15 @@ class InventariosController extends Controller
         );
     }
 
+    public function showProveedores()
+    {
+        $proveedores = Proveedor::all(['proveedor_id' ,'nombre', 'categoria_id']);
+
+        return response()->json([
+            'proveedores' => $proveedores,
+        ]);
+    }
+
     public function buscarPorCodigo($codigo)
     {
         $producto = Producto::where('codigo', $codigo)->first();
@@ -33,12 +43,11 @@ class InventariosController extends Controller
         return response()->json(['producto' => $producto]);
     }
 
-
-    public function productosPorCategoria($categoria_id)
+    public function productosPorProveedor($proveedor_id)
     {
-        $productos = Producto::where('categoria_id', $categoria_id)
-            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual') 
-            ->simplePaginate(10); 
+        $productos = Producto::where('proveedor_id', $proveedor_id)
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual', 'proveedor_id')
+            ->simplePaginate(10);
         
         return response()->json([
             'productos' => $productos->items(), 
@@ -46,8 +55,26 @@ class InventariosController extends Controller
                 'next_page' => $productos->nextPageUrl(),
                 'prev_page' => $productos->previousPageUrl(),
                 'current_page' => $productos->currentPage()
-        ]
-    ]);
+            ]
+        ]);
+    }
+
+
+    public function productosPorCategoria($categoria_id)
+    {
+        $productos = Producto::join('proveedores', 'productos.proveedor_id', '=', 'proveedores.proveedor_id')
+            ->where('proveedores.categoria_id', $categoria_id)
+            ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_actual')
+            ->simplePaginate(10);
+        
+        return response()->json([
+            'productos' => $productos->items(), 
+            'pagination' => [
+                'next_page' => $productos->nextPageUrl(),
+                'prev_page' => $productos->previousPageUrl(),
+                'current_page' => $productos->currentPage()
+            ]
+        ]);
     }
     
     public function catalogo(){
@@ -63,10 +90,35 @@ class InventariosController extends Controller
         return Inertia::render('Inventario/CrearInventario');
     }
 
+    public function storeProveedor(Request $request)
+    {
+        // Mensajes personalizados para la validación
+        $messages = [
+            'nombre.required' => 'El nombre del proveedor es obligatorio.',
+            'nombre.unique' => 'Ya existe un proveedor con ese nombre.',
+            'categoria_id.required' => 'La categoría es obligatoria.',
+            'categoria_id.exists' => 'La categoría seleccionada no existe.',
+        ];
+
+        // Validación de los datos del formulario
+        $request->validate([
+            'nombre' => 'required|string|max:255|unique:proveedores,nombre',
+            'categoria_id' => 'required|exists:categorias_productos,categoria_id',
+        ], $messages);
+
+        // Crear un nuevo proveedor
+        Proveedor::create([
+            'nombre' => $request->nombre,
+            'categoria_id' => $request->categoria_id,
+        ]);
+
+        // Redirigir con un mensaje de éxito
+        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');    }
+
     public function store(Request $request)
 {
     $messages = [
-        'nombre.required' => 'El nombre del producto es obligatorio.',
+        'nombre.required' => 'El nombre del proveedor es obligatorio.',
         'codigo.required' => 'El código del producto es obligatorio.',
         'codigo.max' => 'El código no debe ser mayor a 6 caracteres.',
         'codigo.unique' => 'Este código ya está en uso.',
@@ -85,7 +137,7 @@ class InventariosController extends Controller
         'codigo' => 'required|string|max:6|unique:productos,codigo',
         'stock' => 'integer|min:0',
         'precio_actual' => 'required|numeric|min:0',
-        'categoria_id' => 'required|exists:categorias_productos,categoria_id',
+        'proveedor_id' => 'required|exists:proveedores,proveedor_id',
     ], $messages);
 
     Producto::create($request->all());

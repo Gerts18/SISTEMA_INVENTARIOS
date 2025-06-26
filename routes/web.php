@@ -29,7 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
         Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
+        Route::post('/createProveedor',[InventariosController::class, 'storeProveedor'])->name('inventario.storeProveedor');
         Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
+        Route::get('/productos-proveedor/{proveedor_id}', [InventariosController::class, 'productosPorProveedor'])->name('inventario.productosPorProveedor');
+        Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
 

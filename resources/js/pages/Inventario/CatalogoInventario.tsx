@@ -10,10 +10,15 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
 import { CirclePlus, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { ProductTable } from '@/components/inventory/ProductTable';
+import { AddProductModal } from '@/components/inventory/AddProductModal';
 
 const CatalogoInventario = () => {
     const [categorias, setCategorias] = useState<{ categoria_id: string; nombre: string }[]>([]);
+    const [proveedores, setProveedores] = useState<{ proveedor_id: string; nombre: string }[]>([]);
     const [open, setOpen] = useState(false);
+    const [openProveedor, setOpenProveedor] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [paginationInfo, setPaginationInfo] = useState({
@@ -23,6 +28,14 @@ const CatalogoInventario = () => {
     });
     const [success, setSuccess] = useState(false);
     const [productoId, setProductoId] = useState('');
+    const [formData, setFormData] = useState({
+        proveedor_id: '',
+        nombre: '',
+        codigo: '',
+        stock: 0,
+        precio_actual: '',
+        categoria_id: '',
+    });
     type Producto = {
         id: number;
         producto_id: string;
@@ -33,13 +46,21 @@ const CatalogoInventario = () => {
         categoria_id: string | number;
     };
     const [productos, setProductos] = useState<Producto[]>([]);
-    const [formData, setFormData] = useState({
+    const [formDataProveedor, setFormDataProveedor] = useState({
         nombre: '',
-        codigo: '',
-        stock: 0,
-        precio_actual: '',
         categoria_id: '',
     });
+
+    const fetchProveedores = () => {
+        axios
+            .get('/inventario/proveedores')
+            .then((response) => {
+                setProveedores(response.data.proveedores);
+            })
+            .catch((error) => {
+                console.error('Error al obtener los proveedores:', error);
+            });
+    };
 
     useEffect(() => {
         axios
@@ -52,20 +73,24 @@ const CatalogoInventario = () => {
             });
     }, []);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    useEffect(() => {
+        fetchProveedores();
+    }, []);
+
+    const handleSubmitProveedor = (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Preparar los datos que se enviarán al backend
         const payload = {
-            ...formData,
-            categoria_id: parseInt(formData.categoria_id),
-            stock: Number(formData.stock),
-            precio_actual: parseFloat(formData.precio_actual),
+            nombre: formDataProveedor.nombre,
+            categoria_id: parseInt(formDataProveedor.categoria_id), // Convertir a entero
         };
 
         console.log('Datos enviados al backend:', payload);
 
         try {
-            if (!payload.nombre || !payload.codigo || !payload.categoria_id || !payload.precio_actual) {
+            // Validación básica antes de enviar los datos
+            if (!payload.nombre || !payload.categoria_id) {
                 setFormError('Todos los campos son obligatorios.');
                 return;
             }
@@ -74,9 +99,11 @@ const CatalogoInventario = () => {
             return;
         }
 
+        // Limpiar cualquier error previo
         setFormError(null);
 
-        router.post(route('inventario.store'), payload, {
+        // Enviar los datos al backend
+        router.post(route('inventario.storeProveedor'), payload, {
             onError: (errors) => {
                 console.error('Errores de validación:', errors);
                 let errorMessage = '';
@@ -89,20 +116,56 @@ const CatalogoInventario = () => {
                 setFormError(` ${errorMessage}`);
             },
             onSuccess: () => {
-                console.log('Producto creado exitosamente');
-                setOpen(false);
+                console.log('Proveedor creado exitosamente');
+                setOpenProveedor(false);
                 setSuccess(true);
-                const categoriaSeleccionada = formData.categoria_id;
-                setFormData({
-                    nombre: '',
-                    codigo: '',
-                    stock: 0,
-                    precio_actual: '',
-                    categoria_id: categoriaSeleccionada,
-                });
                 setTimeout(() => setSuccess(false), 3000);
+
+                // Actualizar la lista de proveedores
+                fetchProveedores();
+
+                // Limpiar el formulario
+                setFormDataProveedor({
+                    nombre: '',
+                    categoria_id: '',
+                });
             },
         });
+    };
+
+    const refreshCurrentProducts = () => {
+        // Si hay una categoría seleccionada, actualizar productos de esa categoría
+        if (formData.categoria_id) {
+            axios
+                .get(`/inventario/productos/${formData.categoria_id}`)
+                .then((response) => {
+                    setProductos(response.data.productos);
+                    setPaginationInfo({
+                        nextPageUrl: response.data.pagination.next_page,
+                        prevPageUrl: response.data.pagination.prev_page,
+                        currentPage: response.data.pagination.current_page,
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error al obtener los productos:', error);
+                });
+        }
+        // Si hay un proveedor seleccionado (sin categoría), actualizar productos de ese proveedor
+        else if (formData.proveedor_id) {
+            axios
+                .get(`/inventario/productos-proveedor/${formData.proveedor_id}`)
+                .then((response) => {
+                    setProductos(response.data.productos);
+                    setPaginationInfo({
+                        nextPageUrl: response.data.pagination.next_page,
+                        prevPageUrl: response.data.pagination.prev_page,
+                        currentPage: response.data.pagination.current_page,
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error al obtener productos del proveedor:', error);
+                });
+        }
     };
 
     return (
@@ -113,33 +176,38 @@ const CatalogoInventario = () => {
                     <AlertDescription>Producto agregado correctamente.</AlertDescription>
                 </Alert>
             )}
-            <Dialog open={open} onOpenChange={setOpen}>
+            
+            <AddProductModal
+                proveedores={proveedores}
+                selectedCategoryId={formData.categoria_id}
+                onSuccess={() => {
+                    setSuccess(true);
+                    setTimeout(() => setSuccess(false), 3000);
+                }}
+                onProductCreated={refreshCurrentProducts}
+            />
+
+            <Dialog open={openProveedor} onOpenChange={setOpenProveedor}>
                 <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2">
                         <CirclePlus className="mr-2 h-4 w-4" />
-                        Agregar producto
+                        Agregar proveedor
                     </Button>
                 </DialogTrigger>
 
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Agregar nuevo producto</DialogTitle>
-                        <DialogDescription>Complete los campos del formulario para registrar un nuevo producto.</DialogDescription>
+                        <DialogTitle>Agregar nuevo proveedor</DialogTitle>
+                        <DialogDescription>Complete los campos del formulario para registrar un nuevo proveedor.</DialogDescription>
                     </DialogHeader>
 
-                    {formError && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{formError}</AlertDescription>
-                        </Alert>
-                    )}
-                    <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
+                    <form className="space-y-4" onSubmit={handleSubmitProveedor} autoComplete="off">
                         <div>
                             <Label htmlFor="categoria_id">Categoría</Label>
                             <select
                                 id="categoria_id"
-                                value={formData.categoria_id}
-                                onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })}
+                                value={formDataProveedor.categoria_id}
+                                onChange={(e) => setFormDataProveedor({ ...formDataProveedor, categoria_id: e.target.value })}
                                 className="w-full rounded border bg-white px-3 py-2 text-black dark:bg-zinc-900 dark:text-white"
                             >
                                 <option value="">Seleccione una categoría</option>
@@ -154,41 +222,13 @@ const CatalogoInventario = () => {
                         <div className="flex gap-4">
                             <div className="flex-1">
                                 <Label htmlFor="nombre">Nombre</Label>
-                                <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} />
-                            </div>
-                            <div className="flex-1">
-                                <Label htmlFor="codigo">Código</Label>
                                 <Input
-                                    id="codigo"
-                                    value={formData.codigo}
-                                    maxLength={6}
-                                    inputMode="numeric"
-                                    onChange={(e) => {
-                                        // Solo permitir números y máximo 6 caracteres
-                                        const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                        setFormData({ ...formData, codigo: value });
-                                    }}
+                                    id="nombre"
+                                    value={formDataProveedor.nombre}
+                                    onChange={(e) => setFormDataProveedor({ ...formDataProveedor, nombre: e.target.value })}
                                 />
                             </div>
                         </div>
-
-                        <div className="flex gap-4">
-                            <div className="flex flex-1 flex-col">
-                                <Label htmlFor="stock">Cantidad</Label>
-                                <Label className="mt-3 ml-10">0</Label>
-                            </div>
-                            <div className="flex-1">
-                                <Label htmlFor="precio_actual">Precio por unidad</Label>
-                                <Input
-                                    id="precio_actual"
-                                    type="number"
-                                    step="0.01"
-                                    value={formData.precio_actual}
-                                    onChange={(e) => setFormData({ ...formData, precio_actual: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
                         <Button type="submit">Guardar</Button>
                     </form>
                 </DialogContent>
@@ -242,10 +282,6 @@ const CatalogoInventario = () => {
                                         .get(`/inventario/buscar/${productoId}`)
                                         .then((response) => {
                                             const producto = response.data.producto;
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                categoria_id: producto.categoria_id.toString(),
-                                            }));
                                             setProductos([producto]);
                                         })
                                         .catch((error) => {
@@ -273,11 +309,11 @@ const CatalogoInventario = () => {
                                     .then((response) => {
                                         setProductos(response.data.productos);
                                         setPaginationInfo({
-                                                nextPageUrl: response.data.pagination.next_page,
-                                                prevPageUrl: response.data.pagination.prev_page,
-                                                currentPage: response.data.pagination.current_page,
-                                            });
-                                            console.log('Productos actualizados:', response);
+                                            nextPageUrl: response.data.pagination.next_page,
+                                            prevPageUrl: response.data.pagination.prev_page,
+                                            currentPage: response.data.pagination.current_page,
+                                        });
+                                        console.log('Productos actualizados:', response);
                                     })
                                     .catch((error) => {
                                         console.error('Error al obtener los productos:', error);
@@ -323,7 +359,7 @@ const CatalogoInventario = () => {
                                 onClick={() => {
                                     if (paginationInfo.prevPageUrl) {
                                         axios.get(paginationInfo.prevPageUrl).then((response) => {
-                                            setProductos(response.data.productos); // ✅ Array
+                                            setProductos(response.data.productos);
                                             setPaginationInfo({
                                                 nextPageUrl: response.data.pagination.next_page,
                                                 prevPageUrl: response.data.pagination.prev_page,
@@ -341,7 +377,7 @@ const CatalogoInventario = () => {
                                 onClick={() => {
                                     if (paginationInfo.nextPageUrl) {
                                         axios.get(paginationInfo.nextPageUrl).then((response) => {
-                                            setProductos(response.data.productos); // ✅ Array
+                                            setProductos(response.data.productos);
                                             setPaginationInfo({
                                                 nextPageUrl: response.data.pagination.next_page,
                                                 prevPageUrl: response.data.pagination.prev_page,
@@ -355,26 +391,7 @@ const CatalogoInventario = () => {
                             </Button>
                         </div>
                     </Label>
-                    <table className="mt-2 w-full border">
-                        <thead>
-                            <tr className="bg-zinc-100 dark:bg-zinc-800">
-                                <th className="border px-4 py-2">Nombre</th>
-                                <th className="border px-4 py-2">Código</th>
-                                <th className="border px-4 py-2">Stock</th>
-                                <th className="border px-4 py-2">Precio</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {productos.map((prod) => (
-                                <tr key={prod.id || prod.producto_id}>
-                                    <td className="border px-4 py-2">{prod.nombre}</td>
-                                    <td className="border px-4 py-2">{prod.codigo}</td>
-                                    <td className="border px-4 py-2">{prod.stock}</td>
-                                    <td className="border px-4 py-2">${prod.precio_actual}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                    <ProductTable productos={productos} className="mt-2" />
                 </div>
             </div>
         </div>
