@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::post('/registrar', [GestionesController::class, 'registrarGestion']);
         
-        Route::post('/subir-comprobante', [GestionesController::class, 'subirArchivoComprobante'])->name('gestion.subir-comprobante');
+        /* Route::post('/subir-comprobante', [GestionesController::class, 'subirArchivoComprobante'])->name('gestion.subir-comprobante'); */
     });
 
     //Reportes de inventario
