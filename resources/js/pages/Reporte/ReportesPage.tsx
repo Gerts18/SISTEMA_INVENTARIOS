@@ -71,7 +71,7 @@ const ReportesPage = ({ gestiones = [], fechaSeleccionada, fechasDisponibles = [
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min p-6">
                     
-                    {/* Date Filter */}
+                    {/* Filtro de datos*/}
                     <div className="mb-6 flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <Calendar className="h-5 w-5 text-gray-500" />
@@ -91,7 +91,7 @@ const ReportesPage = ({ gestiones = [], fechaSeleccionada, fechasDisponibles = [
                         </Select>
                     </div>
 
-                    {/* Results Info */}
+                    {/*Informacion de resultados */}
                     <div className="mb-4 text-sm text-gray-600">
                         {gestiones.length > 0 ? (
                             <span>Se encontraron {gestiones.length} gestiones para {formatDateForDisplay(fechaSeleccionada)}</span>
@@ -100,7 +100,7 @@ const ReportesPage = ({ gestiones = [], fechaSeleccionada, fechasDisponibles = [
                         )}
                     </div>
 
-                    {/* Gestiones Grid */}
+                    {/* Grid de reportes*/}
                     {gestiones.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {gestiones.map((gestion) => (

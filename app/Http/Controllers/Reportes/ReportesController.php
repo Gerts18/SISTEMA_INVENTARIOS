@@ -24,7 +24,7 @@ class ReportesController extends Controller
         ->orderBy('fecha', 'desc')
         ->get();
 
-        // Get available dates for the filter
+        // Obtener las fechas disponibles en el inventario       
         $fechasDisponibles = GestionInventario::selectRaw('DATE(fecha) as fecha')
             ->distinct()
             ->orderBy('fecha', 'desc')
