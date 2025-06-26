@@ -4,6 +4,8 @@ import TablaProductos from "./TablaProductos"
 import FileUpload from "@/components/Files/FileUpload"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
 import {
@@ -17,6 +19,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { usePage } from "@inertiajs/react"
 
 const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }: any) => {
     // Estado para la lista de productos agregados
@@ -25,6 +28,13 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     const [loading, setLoading] = useState(false)
     const [alerta, setAlerta] = useState<{ visible: boolean, mensaje: string, tipo: "success" | "error" | "warning" }>({ visible: false, mensaje: "", tipo: "success" })
     const [openDialog, setOpenDialog] = useState(false)
+    const [authEmail, setAuthEmail] = useState("")
+    const [authPassword, setAuthPassword] = useState("")
+    const [requiereAuth, setRequiereAuth] = useState(false)
+    
+    const { props } = usePage()
+    const userRoles = (props.auth as any)?.user?.roles || []
+    const esAdministrador = userRoles.some((role: any) => role.name === 'Administrador')
 
     // Reinicia la lista si cambia el tipo
     useEffect(() => {
@@ -94,6 +104,23 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         return true
     }
 
+    // Verificar si hay productos de madera
+    const tieneProductosMadera = useMemo(() => {
+        return lista.some(prod => 
+            prod.proveedor_categoria && 
+            prod.proveedor_categoria.toLowerCase() === 'madera'
+        )
+    }, [lista])
+
+    // Determinar si requiere autenticación
+    useEffect(() => {
+        setRequiereAuth(tieneProductosMadera && !esAdministrador)
+        if (!tieneProductosMadera || esAdministrador) {
+            setAuthEmail("")
+            setAuthPassword("")
+        }
+    }, [tieneProductosMadera, esAdministrador])
+
     // Confirmación y registro
     const handleRegistrar = async () => {
         setLoading(true)
@@ -107,6 +134,12 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
 
             if (selectedFile) {
                 formData.append('comprobante', selectedFile)
+            }
+
+            // Agregar credenciales de autenticación si se requieren
+            if (requiereAuth) {
+                formData.append('auth_email', authEmail)
+                formData.append('auth_password', authPassword)
             }
 
             const res = await axios.post("/gestion/registrar", formData, {
@@ -123,6 +156,8 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                 })
                 setLista([])
                 setSelectedFile(null)
+                setAuthEmail("")
+                setAuthPassword("")
                 
                 // Auto-hide success message after 5 seconds
                 setTimeout(() => {
@@ -239,7 +274,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                 {loading ? "Registrando..." : "Continuar"}
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-md">
                             <AlertDialogHeader>
                                 <AlertDialogTitle>¿Está seguro de registrar esta gestión?</AlertDialogTitle>
                                 <AlertDialogDescription>
@@ -251,11 +286,48 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                     )}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
+                            
+                            {/* Campos de autenticación para productos de madera */}
+                            {requiereAuth && (
+                                <div className="space-y-4 py-4">
+                                    <Alert className="border-amber-200 bg-amber-50">
+                                        <AlertTriangle className="h-4 w-4 text-amber-600" />
+                                        <AlertDescription className="text-amber-800">
+                                            Esta gestión incluye productos de madera. Se requiere autenticación de un usuario con rol de producción.
+                                        </AlertDescription>
+                                    </Alert>
+                                    
+                                    <div className="space-y-2">
+                                        <Label htmlFor="auth-email">Correo electrónico</Label>
+                                        <Input
+                                            id="auth-email"
+                                            type="email"
+                                            value={authEmail}
+                                            onChange={(e) => setAuthEmail(e.target.value)}
+                                            placeholder="correo@ejemplo.com"
+                                            disabled={loading}
+                                        />
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <Label htmlFor="auth-password">Contraseña</Label>
+                                        <Input
+                                            id="auth-password"
+                                            type="password"
+                                            value={authPassword}
+                                            onChange={(e) => setAuthPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            disabled={loading}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             <AlertDialogFooter>
                                 <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
                                 <AlertDialogAction
                                     onClick={handleRegistrar}
-                                    disabled={loading}
+                                    disabled={loading || (requiereAuth && (!authEmail || !authPassword))}
                                 >
                                     {loading ? "Registrando..." : "Confirmar"}
                                 </AlertDialogAction>

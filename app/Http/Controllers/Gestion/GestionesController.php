@@ -9,9 +9,11 @@ use Inertia\Inertia;
 use App\Models\Productos\Producto;
 use App\Models\Gestion\GestionInventario;
 use App\Models\Gestion\CambioProducto;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+/* use Illuminate\Support\Facades\Storage; */
+use Illuminate\Support\Facades\Hash;
 
 use Aws\S3\S3Client;
 use Illuminate\Support\Facades\Log;
@@ -55,12 +57,36 @@ class GestionesController extends Controller
         ]);
     }
 
+    public function verificarCredencialesProduccion(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['success' => false, 'message' => 'Credenciales incorrectas'], 401);
+        }
+
+        // Verificar que el usuario tenga rol de producción o administrador
+        if (!$user->hasAnyRole(['produccion', 'administrador'])) {
+            return response()->json(['success' => false, 'message' => 'Usuario sin permisos de producción'], 403);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Credenciales verificadas']);
+    }
+
     public function registrarGestion(Request $request)
     {
         $request->validate([
             'tipo' => 'required|in:Entrada,Salida',
             'productos' => 'required|string',
             'comprobante' => 'nullable|file|mimes:jpeg,png,jpg,gif,pdf,doc,docx|max:10240',
+            // Campos opcionales para autenticación de producción
+            'auth_email' => 'nullable|email',
+            'auth_password' => 'nullable|string',
         ]);
 
         $usuarioId = Auth::id();
@@ -69,6 +95,39 @@ class GestionesController extends Controller
 
         if (!$productos || !is_array($productos)) {
             return response()->json(['success' => false, 'message' => 'Productos inválidos'], 400);
+        }
+
+        // Verificar si hay productos de madera
+        $codigosProductos = array_column($productos, 'codigo');
+        $productosConMadera = Producto::with(['proveedor.categoria'])
+            ->whereIn('codigo', $codigosProductos)
+            ->get()
+            ->filter(function ($producto) {
+                return $producto->proveedor && 
+                       $producto->proveedor->categoria && 
+                       strtolower($producto->proveedor->categoria->nombre) === 'madera';
+            });
+
+        // Si hay productos de madera y el usuario actual no es administrador
+        $usuarioActual = User::find(Auth::id());
+        if ($productosConMadera->isNotEmpty() && !$usuarioActual->hasRole('Administrador')) {
+            // Verificar credenciales de producción
+            if (!$request->auth_email || !$request->auth_password) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Se requiere autenticación de producción para gestionar productos de madera'
+                ], 400);
+            }
+
+            $userProduccion = User::where('email', $request->auth_email)->first();
+            if (!$userProduccion || 
+                !Hash::check($request->auth_password, $userProduccion->password) ||
+                !$userProduccion->hasAnyRole(['Produccion', 'Administrador'])) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Credenciales de producción incorrectas o sin permisos'
+                ], 401);
+            }
         }
 
         DB::beginTransaction();
@@ -190,3 +249,4 @@ class GestionesController extends Controller
         }
     }
 }
+ 
