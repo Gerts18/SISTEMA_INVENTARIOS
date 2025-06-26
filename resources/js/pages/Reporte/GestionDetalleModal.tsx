@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ExternalLink, FileText, Image as ImageIcon } from "lucide-react"
 
-import { Producto } from "@/types/inventarios"
-
-import { CambioProducto, Usuario, Gestion } from "@/types/gestion"
+import { Gestion } from "@/types/gestion"
 
 
 type Props = {
