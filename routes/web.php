@@ -8,9 +8,6 @@ use App\Http\Controllers\Inventarios\InventariosController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Reportes\ReportesController;
 
-//Ruta general
-// web.php (temporalmente para pruebas)
-Route::get('/test/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -32,7 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
         Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
+        Route::post('/createProveedor',[InventariosController::class, 'storeProveedor'])->name('inventario.storeProveedor');
         Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
+        Route::get('/productos-proveedor/{proveedor_id}', [InventariosController::class, 'productosPorProveedor'])->name('inventario.productosPorProveedor');
+        Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
 
