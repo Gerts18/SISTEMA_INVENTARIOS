@@ -11,7 +11,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select';
 import { router } from '@inertiajs/react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
-import { CirclePlus } from 'lucide-react';
+import { CirclePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {PageProps} from '@/types/auth'
 import {Head, usePage } from '@inertiajs/react';
@@ -374,7 +374,7 @@ const CatalogoInventario = () => {
 
                 {/* Provider Selection */}
                 <div className="mt-7 flex flex-col px-4">
-                    <Label className="mb-2">Proveedor</Label>
+                    <Label className="text-lg font-semibold">Proveedor</Label>
                     <SearchableSelect
                         options={proveedores.map((prov) => ({
                             value: prov.proveedor_id,
@@ -395,25 +395,31 @@ const CatalogoInventario = () => {
                         </Label>
 
                         {productos.length > 0 && (paginationInfo.nextPageUrl || paginationInfo.prevPageUrl) && (
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
                                 <Button
+                                    variant="outline"
+                                    size="icon"
                                     disabled={!paginationInfo.prevPageUrl}
                                     onClick={() => paginationInfo.prevPageUrl && handlePagination(paginationInfo.prevPageUrl)}
                                 >
-                                    Anterior
+                                    <ChevronLeft className="h-4 w-4" />
                                 </Button>
-                                <span>Página {paginationInfo.currentPage}</span>
+                                <span className="text-sm">Página {paginationInfo.currentPage}</span>
                                 <Button
+                                    variant="outline"
+                                    size="icon"
                                     disabled={!paginationInfo.nextPageUrl}
                                     onClick={() => paginationInfo.nextPageUrl && handlePagination(paginationInfo.nextPageUrl)}
                                 >
-                                    Siguiente
+                                    <ChevronRight className="h-4 w-4" />
                                 </Button>
                             </div>
                         )}
                     </div>
 
-                    <ProductTable productos={productos} />
+                    <div className="overflow-x-auto">
+                        <ProductTable productos={productos} />
+                    </div>
                 </div>
             </div>
         </div>

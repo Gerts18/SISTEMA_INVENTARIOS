@@ -56,7 +56,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
     return (
         <div className={`relative ${className}`} ref={selectRef}>
             <div
-                className="w-full rounded border bg-white px-3 py-2 text-black dark:bg-zinc-900 dark:text-white cursor-pointer flex items-center justify-between"
+                className="w-full rounded border  px-3 py-2 text-black dark:text-white cursor-pointer flex items-center justify-between"
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <span className={displayValue ? '' : 'text-gray-500'}>
