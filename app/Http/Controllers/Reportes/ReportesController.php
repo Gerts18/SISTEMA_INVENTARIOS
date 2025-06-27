@@ -22,6 +22,7 @@ class ReportesController extends Controller
         ])
         ->whereDate('fecha', $fecha)
         ->orderBy('fecha', 'desc')
+        ->orderBy('created_at', 'desc')
         ->get();
 
         // Obtener las fechas disponibles en el inventario       

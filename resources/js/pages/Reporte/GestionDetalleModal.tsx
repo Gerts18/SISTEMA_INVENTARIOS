@@ -33,7 +33,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
     return (
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-                <DialogTitle>Detalle de Gestión</DialogTitle>
+                <DialogTitle>Gestión #{gestion.gestion_inv_id}</DialogTitle>
                 <DialogDescription>
                     Información detallada de la gestión de inventario.
                 </DialogDescription>

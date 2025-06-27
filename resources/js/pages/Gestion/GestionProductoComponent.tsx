@@ -104,13 +104,15 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         return true
     }
 
-    // Verificar si hay productos de madera
+    // Verificar si hay productos de madera SOLO para salidas
     const tieneProductosMadera = useMemo(() => {
+        if (tipo !== "Salida") return false;
+        
         return lista.some(prod => 
             prod.proveedor_categoria && 
             prod.proveedor_categoria.toLowerCase() === 'madera'
         )
-    }, [lista])
+    }, [lista, tipo])
 
     // Determinar si requiere autenticación
     useEffect(() => {
