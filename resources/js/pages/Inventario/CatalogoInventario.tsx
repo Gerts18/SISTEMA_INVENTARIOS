@@ -13,6 +13,8 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
 import { CirclePlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import {PageProps} from '@/types/auth'
+import {Head, usePage } from '@inertiajs/react';
 
 type Categoria = {
     categoria_id: string;
@@ -42,6 +44,10 @@ type PaginationInfo = {
 };
 
 const CatalogoInventario = () => {
+    //Obteniendo rol del usuario
+    const page = usePage<PageProps>();
+    const userRole = page.props.auth?.role;
+
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [proveedores, setProveedores] = useState<Proveedor[]>([]);
     const [openProveedor, setOpenProveedor] = useState(false);
@@ -239,78 +245,82 @@ const CatalogoInventario = () => {
                 </Alert>
             )}
 
-            <AddProductModal
-                proveedores={proveedores}
-                selectedCategoryId={selectedCategoryId}
-                onSuccess={() => {
-                    setSuccess(true);
-                    setTimeout(() => setSuccess(false), 3000);
-                }}
-                onProductCreated={refreshCurrentProducts}
-            />
+            {(userRole === 'Bodega' || userRole === 'Administrador') && (
+                <AddProductModal
+                    proveedores={proveedores}
+                    selectedCategoryId={selectedCategoryId}
+                    onSuccess={() => {
+                        setSuccess(true);
+                        setTimeout(() => setSuccess(false), 3000);
+                    }}
+                    onProductCreated={refreshCurrentProducts}
+                />
+            )}
 
-            <Dialog open={openProveedor} onOpenChange={setOpenProveedor}>
-                <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                        <CirclePlus className="mr-2 h-4 w-4" />
-                        Agregar proveedor
-                    </Button>
-                </DialogTrigger>
+            {(userRole === 'Bodega' || userRole === 'Administrador') && (
+                <Dialog open={openProveedor} onOpenChange={setOpenProveedor}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start gap-2">
+                            <CirclePlus className="mr-2 h-4 w-4" />
+                            Agregar proveedor
+                        </Button>
+                    </DialogTrigger>
 
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Agregar nuevo proveedor</DialogTitle>
-                        <DialogDescription>Complete los campos del formulario para registrar un nuevo proveedor.</DialogDescription>
-                    </DialogHeader>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Agregar nuevo proveedor</DialogTitle>
+                            <DialogDescription>Complete los campos del formulario para registrar un nuevo proveedor.</DialogDescription>
+                        </DialogHeader>
 
-                    {formError && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{formError}</AlertDescription>
-                        </Alert>
-                    )}
+                        {formError && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{formError}</AlertDescription>
+                            </Alert>
+                        )}
 
-                    <form className="space-y-4" onSubmit={handleProviderSubmit} autoComplete="off">
-                        <div>
-                            <Label htmlFor="categoria_id">Categoría</Label>
-                            <select
-                                id="categoria_id"
-                                value={formDataProveedor.categoria_id}
-                                onChange={(e) =>
-                                    setFormDataProveedor({
-                                        ...formDataProveedor,
-                                        categoria_id: e.target.value,
-                                    })
-                                }
-                                className="w-full rounded border bg-white px-3 py-2 text-black dark:bg-zinc-900 dark:text-white"
-                            >
-                                <option value="">Seleccione una categoría</option>
-                                {categorias.map((cat) => (
-                                    <option key={cat.categoria_id} value={cat.categoria_id}>
-                                        {cat.nombre}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        <form className="space-y-4" onSubmit={handleProviderSubmit} autoComplete="off">
+                            <div>
+                                <Label htmlFor="categoria_id">Categoría</Label>
+                                <select
+                                    id="categoria_id"
+                                    value={formDataProveedor.categoria_id}
+                                    onChange={(e) =>
+                                        setFormDataProveedor({
+                                            ...formDataProveedor,
+                                            categoria_id: e.target.value,
+                                        })
+                                    }
+                                    className="w-full rounded border bg-white px-3 py-2 text-black dark:bg-zinc-900 dark:text-white"
+                                >
+                                    <option value="">Seleccione una categoría</option>
+                                    {categorias.map((cat) => (
+                                        <option key={cat.categoria_id} value={cat.categoria_id}>
+                                            {cat.nombre}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                        <div>
-                            <Label htmlFor="nombre">Nombre</Label>
-                            <Input
-                                id="nombre"
-                                value={formDataProveedor.nombre}
-                                onChange={(e) =>
-                                    setFormDataProveedor({
-                                        ...formDataProveedor,
-                                        nombre: e.target.value,
-                                    })
-                                }
-                            />
-                        </div>
+                            <div>
+                                <Label htmlFor="nombre">Nombre</Label>
+                                <Input
+                                    id="nombre"
+                                    value={formDataProveedor.nombre}
+                                    onChange={(e) =>
+                                        setFormDataProveedor({
+                                            ...formDataProveedor,
+                                            nombre: e.target.value,
+                                        })
+                                    }
+                                />
+                            </div>
 
-                        <Button type="submit">Guardar</Button>
-                    </form>
-                </DialogContent>
-            </Dialog>
+                            <Button type="submit">Guardar</Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            )}
 
             <div className="mt-7">
                 {/* Product Search Section */}
