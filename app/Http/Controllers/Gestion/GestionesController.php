@@ -97,20 +97,24 @@ class GestionesController extends Controller
             return response()->json(['success' => false, 'message' => 'Productos inválidos'], 400);
         }
 
-        // Verificar si hay productos de madera
+        // Verificar si hay productos de madera SOLO para salidas
         $codigosProductos = array_column($productos, 'codigo');
-        $productosConMadera = Producto::with(['proveedor.categoria'])
-            ->whereIn('codigo', $codigosProductos)
-            ->get()
-            ->filter(function ($producto) {
-                return $producto->proveedor && 
-                       $producto->proveedor->categoria && 
-                       strtolower($producto->proveedor->categoria->nombre) === 'madera';
-            });
+        $productosConMadera = collect();
+        
+        if ($tipo === 'Salida') {
+            $productosConMadera = Producto::with(['proveedor.categoria'])
+                ->whereIn('codigo', $codigosProductos)
+                ->get()
+                ->filter(function ($producto) {
+                    return $producto->proveedor && 
+                           $producto->proveedor->categoria && 
+                           strtolower($producto->proveedor->categoria->nombre) === 'madera';
+                });
+        }
 
-        // Si hay productos de madera y el usuario actual no es administrador
+        // Si hay productos de madera en una SALIDA y el usuario actual no es administrador
         $usuarioActual = User::find(Auth::id());
-        if ($productosConMadera->isNotEmpty() && !$usuarioActual->hasRole('Administrador')) {
+        if ($tipo === 'Salida' && $productosConMadera->isNotEmpty() && !$usuarioActual->hasRole('Administrador')) {
             // Verificar credenciales de producción
             if (!$request->auth_email || !$request->auth_password) {
                 return response()->json([
@@ -249,4 +253,3 @@ class GestionesController extends Controller
         }
     }
 }
- 
