@@ -15,12 +15,16 @@ class Obra extends Model
         'nombre',
         'descripcion',
         'fecha_inicio',
+        'fecha_fin',
+        'estado',
     ];
 
     public static $rules = [
         'nombre' => 'required|string|max:255',
         'descripcion' => 'nullable|string|max:500',
         'fecha_inicio' => 'required|date',
+        'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
+        'estado' => 'required|string|max:50|in:en_progreso,completada,pendiente',
     ];
 
     public function solicitudes()

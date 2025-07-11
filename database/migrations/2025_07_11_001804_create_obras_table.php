@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('nombre', 255);
             $table->string('descripcion', 500)->nullable();
             $table->date('fecha_inicio');
+            $table->date('fecha_fin')->nullable();
+            $table->string('estado', 50)->default('en_progreso');
             $table->timestamps();
         });
     }
