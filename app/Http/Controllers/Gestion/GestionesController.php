@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Gestion;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Files\FilesController;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,7 +16,6 @@ use Illuminate\Support\Facades\Auth;
 /* use Illuminate\Support\Facades\Storage; */
 use Illuminate\Support\Facades\Hash;
 
-use Aws\S3\S3Client;
 use Illuminate\Support\Facades\Log;
 
 class GestionesController extends Controller
@@ -170,9 +170,10 @@ class GestionesController extends Controller
                 ]);
             }
 
-            // Usar la función subirArchivo para manejar el comprobante con ID de gestión
+            // Usar FilesController para manejar el comprobante con ID de gestión
             if ($request->hasFile('comprobante')) {
-                $uploadResult = $this->subirArchivo($request, $gestion->gestion_inv_id);
+                $filesController = new FilesController();
+                $uploadResult = $filesController->subirArchivo($request, $gestion->gestion_inv_id);
                 $uploadData = $uploadResult->getData(true);
                 
                 if ($uploadData['success']) {
@@ -187,69 +188,6 @@ class GestionesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function subirArchivo(Request $request, $gestionId = null)
-    {
-        if (!$request->hasFile('comprobante')) {
-            return response()->json(['success' => false], 400);
-        }
-
-        try {
-            $file = $request->file('comprobante');
-            
-            // Generar nombre de archivo específico según si tiene gestionId
-            if ($gestionId) {
-                $fecha = now()->format('Y-m-d_H-i-s');
-                $fileName = "comprobante_{$gestionId}_{$fecha}." . $file->getClientOriginalExtension();
-            } else {
-                $fileName = time() . '_' . $file->getClientOriginalName();
-            }
-            
-            $mimeType = $file->getMimeType();
-
-            $s3 = new S3Client([
-                'version' => 'latest',
-                'region' => env('AWS_DEFAULT_REGION'),
-                'credentials' => [
-                    'key' => env('AWS_ACCESS_KEY_ID'),
-                    'secret' => env('AWS_SECRET_ACCESS_KEY'),
-                ],
-                'http' => [
-                    'verify' => env('APP_ENV') === 'local' 
-                            ? false
-                            : true
-                ]
-            ]);
-
-            $result = $s3->putObject([
-                'Bucket' => env('AWS_BUCKET'),
-                'Key' => 'comprobantes/' . $fileName,
-                'Body' => fopen($file->getPathname(), 'r'),
-                'ContentType' => $mimeType,
-                'ContentDisposition' => 'inline',
-                'CacheControl' => 'max-age=31536000',
-            ]);
-
-            // Genera la URL pública del archivo
-            $publicUrl = sprintf(
-                'https://%s.s3.%s.amazonaws.com/%s',
-                env('AWS_BUCKET'),
-                env('AWS_DEFAULT_REGION'),
-                'comprobantes/' . $fileName
-            );
-
-            return response()->json([
-                'success' => true,
-                'url' => $publicUrl
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
         }
     }
 }
