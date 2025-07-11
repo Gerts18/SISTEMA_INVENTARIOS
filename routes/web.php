@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño']], function () {
 
         Route::get('/', [ObrasController::class, 'show'])->name('obras');
+        Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');
 
     });
 });
