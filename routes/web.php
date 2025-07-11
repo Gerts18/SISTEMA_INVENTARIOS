@@ -6,6 +6,7 @@ use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
 use App\Http\Controllers\Gestion\GestionesController;
+use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
 
 
@@ -53,6 +54,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['prefix' => 'reportes', 'middleware' => ['role:Administrador']], function () {
 
         Route::get('/', [ReportesController::class, 'show'])->name('reportes');
+
+    });
+
+    //Reportes de inventario
+    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño']], function () {
+
+        Route::get('/', [ObrasController::class, 'show'])->name('obras');
 
     });
 });
