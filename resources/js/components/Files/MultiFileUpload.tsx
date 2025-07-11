@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Upload, File, Image, XCircle, AlertTriangle, Plus } from 'lucide-react'
+import { Upload, File, Image, XCircle, AlertTriangle } from 'lucide-react'
 
 interface MultiFileUploadProps {
     onFilesChange: (files: (File | null)[]) => void;
@@ -89,10 +89,6 @@ const MultiFileUpload = ({
 
     const getUploadedFilesCount = () => {
         return files.filter(file => file !== null).length
-    }
-
-    const hasAnyErrors = () => {
-        return fileSizeErrors.some(error => error !== null)
     }
 
     return (

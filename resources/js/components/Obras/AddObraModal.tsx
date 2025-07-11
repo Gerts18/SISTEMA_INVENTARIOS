@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { CirclePlus } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import MultiFileUpload from '@/components/Files/MultiFileUpload';
 
 interface AddObraModalProps {
@@ -27,6 +27,13 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         descripcion: '',
     });
     const [selectedFiles, setSelectedFiles] = useState<(File | null)[]>([null, null, null]);
+
+    // Calculate if form is valid
+    const isFormValid = useMemo(() => {
+        const hasFiles = selectedFiles.some(file => file !== null);
+        const hasName = formData.nombre.trim().length > 0;
+        return hasFiles && hasName;
+    }, [selectedFiles, formData.nombre]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,6 +94,19 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
 
     const handleFilesChange = (files: (File | null)[]) => {
         setSelectedFiles(files);
+        // Clear form error when files are added
+        if (files.some(file => file !== null) && formError) {
+            setFormError(null);
+        }
+    };
+
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newName = e.target.value;
+        setFormData({ ...formData, nombre: newName });
+        // Clear form error when name is added
+        if (newName.trim() && formError) {
+            setFormError(null);
+        }
     };
 
     return (
@@ -117,7 +137,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                         <Input 
                             id="nombre" 
                             value={formData.nombre} 
-                            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                            onChange={handleNameChange}
                             placeholder="Ingrese el nombre de la obra"
                             required
                         />
@@ -148,7 +168,11 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             Cancelar
                         </Button>
-                        <Button type="submit">
+                        <Button 
+                            type="submit" 
+                            disabled={!isFormValid}
+                            className={!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}
+                        >
                             Crear Obra
                         </Button>
                     </div>
