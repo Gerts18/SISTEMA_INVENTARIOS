@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Gestion\GestionInventario;
+use App\Models\Solicitudes\SolicitudMaterial;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -55,5 +56,10 @@ class User extends Authenticatable
     public function gestionInventario()
     {
         return $this->hasMany(GestionInventario::class, 'usuario_id', 'id');
+    }
+
+    public function usuarioPideMaterial()
+    {
+        return $this->hasMany(SolicitudMaterial::class, 'usuario_id', 'id');
     }
 }
