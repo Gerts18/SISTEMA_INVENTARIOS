@@ -4,11 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { router } from '@inertiajs/react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { CirclePlus } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import MultiFileUpload from '@/components/Files/MultiFileUpload';
+import axios from 'axios';
 
 interface AddObraModalProps {
     onSuccess: () => void;
@@ -22,6 +22,7 @@ interface ObraFormData {
 export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const [open, setOpen] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<ObraFormData>({
         nombre: '',
         descripcion: '',
@@ -32,10 +33,10 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const isFormValid = useMemo(() => {
         const hasFiles = selectedFiles.some(file => file !== null);
         const hasName = formData.nombre.trim().length > 0;
-        return hasFiles && hasName;
-    }, [selectedFiles, formData.nombre]);
+        return hasFiles && hasName && !isSubmitting;
+    }, [selectedFiles, formData.nombre, isSubmitting]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         // Validate that at least one file is selected
@@ -51,6 +52,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         }
 
         setFormError(null);
+        setIsSubmitting(true);
 
         // Create FormData for file upload
         const formDataToSend = new FormData();
@@ -64,19 +66,15 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
             }
         });
 
-        router.post(route('obras.store'), formDataToSend, {
-            forceFormData: true,
-            onError: (errors) => {
-                console.error('Errores de validación:', errors);
-                let errorMessage = '';
-                if (typeof errors === 'object' && !Array.isArray(errors)) {
-                    errorMessage = Object.values(errors).join(', ');
-                } else {
-                    errorMessage = String(errors);
+        try {
+            const response = await axios.post(route('obras.store'), formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                 }
-                setFormError(errorMessage);
-            },
-            onSuccess: () => {
+            });
+
+            if (response.data.success) {
                 console.log('Obra creada exitosamente');
                 setOpen(false);
                 onSuccess();
@@ -88,8 +86,24 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                 });
                 setSelectedFiles([null, null, null]);
                 setFormError(null);
-            },
-        });
+            } else {
+                setFormError(response.data.message || 'Error al crear la obra');
+            }
+        } catch (error: any) {
+            console.error('Error al crear obra:', error);
+            
+            if (error.response?.data?.errors) {
+                const errors = error.response.data.errors;
+                const errorMessage = Object.values(errors).flat().join(', ');
+                setFormError(errorMessage);
+            } else if (error.response?.data?.message) {
+                setFormError(error.response.data.message);
+            } else {
+                setFormError('Error al crear la obra. Intente nuevamente.');
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleFilesChange = (files: (File | null)[]) => {
@@ -165,7 +179,12 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setOpen(false)}
+                            disabled={isSubmitting}
+                        >
                             Cancelar
                         </Button>
                         <Button 
@@ -173,7 +192,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                             disabled={!isFormValid}
                             className={!isFormValid ? 'opacity-50 cursor-not-allowed' : ''}
                         >
-                            Crear Obra
+                            {isSubmitting ? 'Creando...' : 'Crear Obra'}
                         </Button>
                     </div>
                 </form>
