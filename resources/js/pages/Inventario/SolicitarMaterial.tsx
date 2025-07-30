@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import axios from 'axios'
 
 interface Obra {
   obra_id: number
@@ -15,6 +24,7 @@ const SolicitarMaterial = () => {
   const [barniz, setBarniz] = useState('')
   const [madera, setMadera] = useState('')
   const [equipos, setEquipos] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     // Set today's date
@@ -22,21 +32,53 @@ const SolicitarMaterial = () => {
     const formattedDate = today.toISOString().split('T')[0]
     setFecha(formattedDate)
 
-    // Fetch obras (placeholder for now)
-    // fetchObras()
+    // Fetch obras
+    fetchObras()
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const fetchObras = async () => {
+    try {
+      setLoading(true)
+      const response = await axios.get('/inventario/solicitar-material/obras')
+      setObras(response.data)
+    } catch (error) {
+      console.error('Error fetching obras:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', {
-      fecha,
-      selectedObra,
-      concepto,
-      herraje,
-      barniz,
-      madera,
-      equipos
-    })
+    
+    try {
+      setLoading(true)
+      const response = await axios.post('/inventario/solicitar-material', {
+        obra_id: selectedObra,
+        concepto,
+        fecha_solicitud: fecha,
+        herraje,
+        barniz,
+        madera,
+        equipos
+      })
+      
+      console.log('Solicitud enviada:', response.data)
+      alert('Solicitud enviada correctamente')
+      
+      // Reset form
+      setSelectedObra('')
+      setConcepto('')
+      setHerraje('')
+      setBarniz('')
+      setMadera('')
+      setEquipos('')
+    } catch (error) {
+      console.error('Error sending solicitud:', error)
+      alert('Error al enviar la solicitud')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -54,30 +96,34 @@ const SolicitarMaterial = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Obra
               </label>
-              <select
+              <Select
                 value={selectedObra}
-                onChange={(e) => setSelectedObra(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onValueChange={setSelectedObra}
+                disabled={loading}
               >
-                <option value="">Seleccionar obra...</option>
-                {obras.map((obra) => (
-                  <option key={obra.obra_id} value={obra.obra_id}>
-                    {obra.nombre}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={loading ? 'Cargando obras...' : 'Seleccionar obra...'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {obras.map((obra) => (
+                    <SelectItem key={obra.obra_id} value={obra.obra_id.toString()}>
+                      {obra.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Concepto
               </label>
-              <input
+              <Input
                 type="text"
                 value={concepto}
                 onChange={(e) => setConcepto(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="Ingrese el concepto..."
+                required
               />
             </div>
           </div>
@@ -133,9 +179,10 @@ const SolicitarMaterial = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
+              disabled={loading}
+              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
             >
-              Enviar a bodega
+              {loading ? 'Enviando...' : 'Enviar a bodega'}
             </button>
           </div>
         </form>

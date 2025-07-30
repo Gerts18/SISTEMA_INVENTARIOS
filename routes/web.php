@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
+use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
@@ -36,6 +37,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
+        
+        // Solicitar Material routes
+        Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
+        Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
+        Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
 
     });
 
