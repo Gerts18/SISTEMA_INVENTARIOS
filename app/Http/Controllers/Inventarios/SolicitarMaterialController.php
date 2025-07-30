@@ -38,17 +38,17 @@ class SolicitarMaterialController extends Controller
         ]);
 
         // Create the solicitud
-        $solicitud = SolicitudMaterial::create([
+        /* $solicitud = SolicitudMaterial::create([
             'usuario_id' => Auth::id(),
             'obra_id' => $request->obra_id,
             'fecha_solicitud' => $request->fecha_solicitud,
             'concepto' => $request->concepto,
-        ]);
+        ]); */
 
         // For now, just return success
         return response()->json([
             'message' => 'Solicitud enviada correctamente',
-            'solicitud_id' => $solicitud->solicitud_id
+            /* 'solicitud_id' => $solicitud->solicitud_id */
         ]);
     }
 }

@@ -69,7 +69,7 @@ const SolicitarMaterial = () => {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 20
-    const lineHeight = 6
+    const lineHeight = 4
     const maxLineWidth = pageWidth - (margin * 2)
     
     let currentY = margin
@@ -89,27 +89,27 @@ const SolicitarMaterial = () => {
       doc.setFontSize(fontSize)
       doc.setFont('helvetica', fontStyle)
       
-      checkPageBreak(fontSize + 5)
+      checkPageBreak(fontSize + 2) 
       doc.text(text, x, currentY)
-      currentY += fontSize + 5
+      currentY += fontSize + 2 
     }
     
     // Funcion para agregar texto multilinea con saltos de página
     const addMultilineText = (text: string, x: number, maxWidth: number) => {
       const lines = doc.splitTextToSize(text, maxWidth)
-      const requiredSpace = lines.length * lineHeight + 10
+      const requiredSpace = lines.length * (lineHeight + 2) + 5
       
       checkPageBreak(requiredSpace)
       
       for (let i = 0; i < lines.length; i++) {
-        if (currentY + lineHeight > pageHeight - margin) {
+        if (currentY + (lineHeight + 2) > pageHeight - margin) {
           doc.addPage()
           currentY = margin
         }
         doc.text(lines[i], x, currentY)
-        currentY += lineHeight
+        currentY += lineHeight + 2 
       }
-      currentY += 5 // Espacio extra después del texto multilinea
+      currentY += 1
     }
     
     // Header
@@ -119,15 +119,15 @@ const SolicitarMaterial = () => {
     // Innfo de la obra en una sola línea
     const selectedObraName = obras.find(obra => obra.obra_id.toString() === selectedObra)?.nombre || ''
     checkPageBreak(20)
-    doc.setFontSize(12)
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     doc.text(`Obra: ${selectedObraName} | Concepto: ${concepto} | Fecha: ${fecha}`, margin, currentY)
-    currentY += 20
+    currentY += 4
     
     // Linea de separación
-    checkPageBreak(20)
+    checkPageBreak(5) // Reducido de 20 a 10
     doc.line(margin, currentY, pageWidth - margin, currentY)
-    currentY += 20
+    currentY += 4
     
     // Secciones de materiales
     const sections = [
@@ -146,26 +146,25 @@ const SolicitarMaterial = () => {
       
       // Seccion del contenido (sin etiqueta "Contenido:")
       const content = section.content || 'Sin contenido'
-      doc.setFontSize(10)
+      doc.setFontSize(14)
       doc.setFont('helvetica', 'normal')
       addMultilineText(content, margin, maxLineWidth)
 
       // Linea de firma
-      checkPageBreak(20)
+      checkPageBreak(10) 
       doc.setFontSize(10)
       doc.text('Nombre y Firma: ________________________', pageWidth - 140, currentY)
-      currentY += 15
+      currentY += 5
       
       // Agrega menos espacio entre secciones
       if (index < sections.length - 1) {
-        currentY += 5
         
         // Opcional: Línea de separación entre secciones
         if (currentY + 5 < pageHeight - margin) {
           doc.setDrawColor(200, 200, 200)
           doc.line(margin, currentY, pageWidth - margin, currentY)
           doc.setDrawColor(0, 0, 0) // Regresa el color a negro
-          currentY += 8
+          currentY += 5
         }
       }
     })
