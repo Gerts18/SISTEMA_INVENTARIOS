@@ -100,4 +100,45 @@ class ObrasController extends Controller
             ], 500);
         }
     }
+
+    public function updateStatus(Request $request, $obraId)
+    {
+        $request->validate([
+            'estado' => 'required|string|in:pendiente,en_progreso,completada',
+        ]);
+
+        try {
+            $obra = Obra::findOrFail($obraId);
+            
+            $updateData = ['estado' => $request->estado];
+            
+            // Si el nuevo estado es 'completada', actualizar fecha_fin
+            if ($request->estado === 'completada') {
+                $updateData['fecha_fin'] = now()->toDateString();
+            }
+            // Si cambia de 'completada' a otro estado, limpiar fecha_fin
+            elseif ($obra->estado === 'completada' && $request->estado !== 'completada') {
+                $updateData['fecha_fin'] = null;
+            }
+            
+            $obra->update($updateData);
+            
+            // Obtener todas las obras actualizadas para devolver a la vista
+            $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
+            
+            return Inertia::render('Obra/ObrasPage', [
+                'obras' => $obras
+            ])->with('success', 'Estado actualizado correctamente.');
+
+        } catch (\Exception $e) {
+            Log::error('Error updating obra status: ' . $e->getMessage());
+            
+            // En caso de error, devolver a la vista con el error
+            $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
+            
+            return Inertia::render('Obra/ObrasPage', [
+                'obras' => $obras
+            ])->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
+        }
+    }
 }
