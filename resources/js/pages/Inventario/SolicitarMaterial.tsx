@@ -97,17 +97,17 @@ const SolicitarMaterial = () => {
     // Funcion para agregar texto multilinea con saltos de página
     const addMultilineText = (text: string, x: number, maxWidth: number) => {
       const lines = doc.splitTextToSize(text, maxWidth)
-      const requiredSpace = lines.length * (lineHeight + 2) + 5
+      const requiredSpace = lines.length * lineHeight + 5 
       
       checkPageBreak(requiredSpace)
       
       for (let i = 0; i < lines.length; i++) {
-        if (currentY + (lineHeight + 2) > pageHeight - margin) {
+        if (currentY + lineHeight > pageHeight - margin) { 
           doc.addPage()
           currentY = margin
         }
         doc.text(lines[i], x, currentY)
-        currentY += lineHeight + 2 
+        currentY += lineHeight 
       }
       currentY += 1
     }
@@ -141,12 +141,16 @@ const SolicitarMaterial = () => {
       // Checa si necesitamos una nueva página antes de cada sección
       checkPageBreak(40)
       
-      // Seccion del título
-      addTextWithPageBreak(section.title, margin, 14, 'bold')
+      // Seccion del título con menos espacio después
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      checkPageBreak(14 + 1)
+      doc.text(section.title, margin, currentY)
+      currentY += 5 // Reducido espacio después del título
       
       // Seccion del contenido (sin etiqueta "Contenido:")
       const content = section.content || 'Sin contenido'
-      doc.setFontSize(14)
+      doc.setFontSize(10)
       doc.setFont('helvetica', 'normal')
       addMultilineText(content, margin, maxLineWidth)
 
