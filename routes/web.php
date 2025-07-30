@@ -39,7 +39,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
         
         // Solicitar Material routes
-        Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
         Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
 

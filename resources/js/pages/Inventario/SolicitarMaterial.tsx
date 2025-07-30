@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { CheckCircle, AlertCircle, XCircle } from 'lucide-react'
 import axios from 'axios'
+import jsPDF from 'jspdf'
 
 interface Obra {
   obra_id: number
@@ -63,10 +64,122 @@ const SolicitarMaterial = () => {
     }, 5000)
   }
 
+  const generatePDF = () => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 20
+    const lineHeight = 6
+    const maxLineWidth = pageWidth - (margin * 2)
+    
+    let currentY = margin
+    
+    // funcion para verificar si necesitamos una nueva página
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - margin) {
+        doc.addPage()
+        currentY = margin
+        return true
+      }
+      return false
+    }
+    
+    // Funcion para agregar texto con saltos de página automáticos
+    const addTextWithPageBreak = (text: string, x: number, fontSize: number = 12, fontStyle: string = 'normal') => {
+      doc.setFontSize(fontSize)
+      doc.setFont('helvetica', fontStyle)
+      
+      checkPageBreak(fontSize + 5)
+      doc.text(text, x, currentY)
+      currentY += fontSize + 5
+    }
+    
+    // Funcion para agregar texto multilinea con saltos de página
+    const addMultilineText = (text: string, x: number, maxWidth: number) => {
+      const lines = doc.splitTextToSize(text, maxWidth)
+      const requiredSpace = lines.length * lineHeight + 10
+      
+      checkPageBreak(requiredSpace)
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (currentY + lineHeight > pageHeight - margin) {
+          doc.addPage()
+          currentY = margin
+        }
+        doc.text(lines[i], x, currentY)
+        currentY += lineHeight
+      }
+      currentY += 5 // Espacio extra después del texto multilinea
+    }
+    
+    // Header
+    addTextWithPageBreak('SOLICITUD DE MATERIAL', pageWidth / 2, 18, 'bold')
+    currentY += 10
+    
+    // Innfo de la obra en una sola línea
+    const selectedObraName = obras.find(obra => obra.obra_id.toString() === selectedObra)?.nombre || ''
+    checkPageBreak(20)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Obra: ${selectedObraName} | Concepto: ${concepto} | Fecha: ${fecha}`, margin, currentY)
+    currentY += 20
+    
+    // Linea de separación
+    checkPageBreak(20)
+    doc.line(margin, currentY, pageWidth - margin, currentY)
+    currentY += 20
+    
+    // Secciones de materiales
+    const sections = [
+      { title: 'HERRAJE', content: herraje },
+      { title: 'BARNIZ', content: barniz },
+      { title: 'MADERA', content: madera },
+      { title: 'EQUIPOS', content: equipos }
+    ]
+    
+    sections.forEach((section, index) => {
+      // Checa si necesitamos una nueva página antes de cada sección
+      checkPageBreak(40)
+      
+      // Seccion del título
+      addTextWithPageBreak(section.title, margin, 14, 'bold')
+      
+      // Seccion del contenido (sin etiqueta "Contenido:")
+      const content = section.content || 'Sin contenido'
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      addMultilineText(content, margin, maxLineWidth)
+
+      // Linea de firma
+      checkPageBreak(20)
+      doc.setFontSize(10)
+      doc.text('Nombre y Firma: ________________________', pageWidth - 140, currentY)
+      currentY += 15
+      
+      // Agrega menos espacio entre secciones
+      if (index < sections.length - 1) {
+        currentY += 5
+        
+        // Opcional: Línea de separación entre secciones
+        if (currentY + 5 < pageHeight - margin) {
+          doc.setDrawColor(200, 200, 200)
+          doc.line(margin, currentY, pageWidth - margin, currentY)
+          doc.setDrawColor(0, 0, 0) // Regresa el color a negro
+          currentY += 8
+        }
+      }
+    })
+    
+    // Abrir PDF en una nueva pestaña
+    const pdfBlob = doc.output('blob')
+    const pdfUrl = URL.createObjectURL(pdfBlob)
+    window.open(pdfUrl, '_blank')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validation
+
     if (!selectedObra) {
       showAlert('Por favor selecciona una obra', 'warning')
       return
@@ -79,6 +192,10 @@ const SolicitarMaterial = () => {
     
     try {
       setLoading(true)
+      
+      //Generar PDF antes de enviar la solicitud
+      generatePDF()
+      
       const response = await axios.post('/inventario/solicitar-material', {
         obra_id: selectedObra,
         concepto,
@@ -90,9 +207,8 @@ const SolicitarMaterial = () => {
       })
       
       console.log('Solicitud enviada:', response.data)
-      showAlert('Solicitud enviada correctamente', 'success')
-      
-      // Reset form
+      showAlert('Solicitud enviada correctamente y PDF generado', 'success')
+
       setSelectedObra('')
       setConcepto('')
       setHerraje('')
@@ -230,7 +346,7 @@ const SolicitarMaterial = () => {
               disabled={loading || !selectedObra || !concepto.trim()}
               className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
             >
-              {loading ? 'Enviando...' : 'Enviar a bodega'}
+              {loading ? 'Cargando...' : 'Enviar a bodega'}
             </button>
           </div>
         </form>
