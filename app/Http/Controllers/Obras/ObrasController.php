@@ -15,7 +15,11 @@ class ObrasController extends Controller
 {
     public function show()
     {
-        return Inertia::render('Obra/ObrasPage');
+        $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
+        
+        return Inertia::render('Obra/ObrasPage', [
+            'obras' => $obras
+        ]);
     }
 
     public function store(Request $request)
