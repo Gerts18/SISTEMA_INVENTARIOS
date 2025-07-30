@@ -174,7 +174,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         setIsPreviewOpen(true);
     };
 
-    const handleDownloadFile = async (archivo: Archivo) => {
+    /* const handleDownloadFile = async (archivo: Archivo) => {
         try {
             const response = await fetch(archivo.url_archivo);
             const blob = await response.blob();
@@ -189,7 +189,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         } catch (error) {
             console.error('Error downloading file:', error);
         }
-    };
+    }; */
 
     return (
         <>
@@ -329,24 +329,6 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                                         <EyeIcon className="h-3 w-3" />
                                                         Vista
                                                     </Button>
-                                                    {/* <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => window.open(archivo.url_archivo, '_blank')}
-                                                        className="flex items-center gap-1 flex-1"
-                                                    >
-                                                        <ExternalLinkIcon className="h-3 w-3" />
-                                                        Abrir
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleDownloadFile(archivo)}
-                                                        className="flex items-center gap-1 flex-1"
-                                                    >
-                                                        <DownloadIcon className="h-3 w-3" />
-                                                        Descargar
-                                                    </Button> */}
                                                 </div>
                                             </div>
                                         </div>
@@ -417,12 +399,12 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         >
                             Abrir en nueva ventana
                         </Button>
-                        <Button
+                        {/* <Button
                             variant="outline"
                             onClick={() => previewFile && handleDownloadFile(previewFile)}
                         >
                             Descargar
-                        </Button>
+                        </Button> */}
                         <Button onClick={() => setIsPreviewOpen(false)}>
                             Cerrar
                         </Button>
