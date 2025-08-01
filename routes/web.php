@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Files\FilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -39,10 +40,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
         
         // Solicitar Material routes
+        Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
         Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
+        Route::put('/solicitar-material/{solicitudId}/pdf-url', [SolicitarMaterialController::class, 'updatePdfUrl']);
 
     });
+
+    Route::post('/files/solicitud-material/{solicitudId}/{obraId}/{nombreObra}', [FilesController::class, 'subirPDFSolicitudMaterial'])->middleware(['auth', 'verified']);
 
     //Rutas para la gestión de inventario (Entradas y Salidas de productos)
     Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
@@ -70,6 +75,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/{obra}/status', [ObrasController::class, 'updateStatus'])->name('obras.updateStatus');
 
     });
+
+
 });
 
 require __DIR__ . '/settings.php';

@@ -64,7 +64,7 @@ const SolicitarMaterial = () => {
     }, 5000)
   }
 
-  const generatePDF = () => {
+  const generatePDF = async (solicitudId: number) => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
@@ -265,16 +265,52 @@ const SolicitarMaterial = () => {
       }
     })
     
-    // Abrir PDF en una nueva pestaña
+    // Convertir PDF a blob
     const pdfBlob = doc.output('blob')
-    const pdfUrl = URL.createObjectURL(pdfBlob)
-    window.open(pdfUrl, '_blank')
+    
+    // Crear FormData para enviar el PDF
+    const formData = new FormData()
+    formData.append('pdf', pdfBlob, `solicitud_${solicitudId}.pdf`)
+    
+    try {
+      // Obtener información de la obra para la ruta
+      const selectedObraData = obras.find(obra => obra.obra_id.toString() === selectedObra)
+      const obraId = selectedObraData?.obra_id
+      const nombreObra = selectedObraData?.nombre.replace(/[^a-zA-Z0-9]/g, '_') // Limpiar nombre para URL
+      
+      // Subir PDF a S3
+      const uploadResponse = await axios.post(
+        `/files/solicitud-material/${solicitudId}/${obraId}/${nombreObra}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      )
+      
+      if (uploadResponse.data.success) {
+        // Actualizar la solicitud con la URL del PDF
+        await axios.put(`/inventario/solicitar-material/${solicitudId}/pdf-url`, {
+          pdf_url: uploadResponse.data.url
+        })
+        
+        return uploadResponse.data.url
+      } else {
+        throw new Error('Error al subir PDF')
+      }
+    } catch (error) {
+      console.error('Error uploading PDF:', error)
+      // Si falla la subida, al menos mostrar el PDF localmente
+/*       const pdfUrl = URL.createObjectURL(pdfBlob)
+      window.open(pdfUrl, '_blank') */
+      throw error
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-
     if (!selectedObra) {
       showAlert('Por favor selecciona una obra', 'warning')
       return
@@ -288,9 +324,7 @@ const SolicitarMaterial = () => {
     try {
       setLoading(true)
       
-      //Generar PDF antes de enviar la solicitud
-      generatePDF()
-      
+      // Primero crear la solicitud
       const response = await axios.post('/inventario/solicitar-material', {
         obra_id: selectedObra,
         concepto,
@@ -301,9 +335,15 @@ const SolicitarMaterial = () => {
         equipos
       })
       
+      const solicitudId = response.data.solicitud_id
+      
+      // Luego generar y subir el PDF
+      await generatePDF(solicitudId)
+      
       console.log('Solicitud enviada:', response.data)
       showAlert('Solicitud enviada correctamente y PDF generado', 'success')
 
+      // Limpiar formulario
       setSelectedObra('')
       setConcepto('')
       setHerraje('')

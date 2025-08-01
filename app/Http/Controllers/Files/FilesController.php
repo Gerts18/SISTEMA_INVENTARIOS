@@ -136,4 +136,66 @@ class FilesController extends Controller
             ], 500);
         }
     }
+
+    public function subirPDFSolicitudMaterial(Request $request, $solicitudId, $obraId, $nombreObra)
+    {
+        if (!$request->hasFile('pdf')) {
+            return response()->json(['success' => false, 'message' => 'No PDF file provided'], 400);
+        }
+
+        try {
+            $file = $request->file('pdf');
+            
+            $fecha = now()->format('Y-m-d_H-i-s');
+            
+            // Crear nombre de archivo: solicitudId_solicitud_material_fecha.pdf
+            $fileName = "{$solicitudId}_solicitud_material_{$fecha}.pdf";
+            
+            // Crear ruta de carpeta: solicitudes_material/obraId_nombreObra/
+            $folderPath = "solicitudes_material/{$obraId}_{$nombreObra}/";
+            
+            $s3 = new S3Client([
+                'version' => 'latest',
+                'region' => env('AWS_DEFAULT_REGION'),
+                'credentials' => [
+                    'key' => env('AWS_ACCESS_KEY_ID'),
+                    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                ],
+                'http' => [
+                    'verify' => env('APP_ENV') === 'local' 
+                            ? false
+                            : true
+                ]
+            ]);
+
+            $result = $s3->putObject([
+                'Bucket' => env('AWS_BUCKET'),
+                'Key' => $folderPath . $fileName,
+                'Body' => fopen($file->getPathname(), 'r'),
+                'ContentType' => 'application/pdf',
+                'ContentDisposition' => 'inline',
+                'CacheControl' => 'max-age=31536000',
+            ]);
+
+            // Genera la URL pública del archivo
+            $publicUrl = sprintf(
+                'https://%s.s3.%s.amazonaws.com/%s',
+                env('AWS_BUCKET'),
+                env('AWS_DEFAULT_REGION'),
+                $folderPath . $fileName
+            );
+
+            return response()->json([
+                'success' => true,
+                'url' => $publicUrl,
+                'filename' => $fileName
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

@@ -35,20 +35,36 @@ class SolicitarMaterialController extends Controller
             'barniz' => 'nullable|string',
             'madera' => 'nullable|string',
             'equipos' => 'nullable|string',
+            'pdf_url' => 'nullable|url',
         ]);
 
         // Create the solicitud
-        /* $solicitud = SolicitudMaterial::create([
+         $solicitud = SolicitudMaterial::create([
             'usuario_id' => Auth::id(),
             'obra_id' => $request->obra_id,
             'fecha_solicitud' => $request->fecha_solicitud,
             'concepto' => $request->concepto,
-        ]); */
+            'reporte_generado_url' => $request->pdf_url,
+        ]); 
 
-        // For now, just return success
         return response()->json([
             'message' => 'Solicitud enviada correctamente',
-            /* 'solicitud_id' => $solicitud->solicitud_id */
+            'solicitud_id' => $solicitud->solicitud_id 
+        ]);
+    }
+
+    public function updatePdfUrl(Request $request, $solicitudId)
+    {
+        $request->validate([
+            'pdf_url' => 'required|url',
+        ]);
+
+        $solicitud = SolicitudMaterial::findOrFail($solicitudId);
+        $solicitud->reporte_generado_url = $request->pdf_url;
+        $solicitud->save();
+
+        return response()->json([
+            'message' => 'PDF URL actualizada correctamente'
         ]);
     }
 }
