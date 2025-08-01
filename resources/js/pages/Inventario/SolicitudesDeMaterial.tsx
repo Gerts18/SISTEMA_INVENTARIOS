@@ -107,7 +107,6 @@ const SolicitudesDeMaterial = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Solicitudes de Material</h1>
-          <p className="text-gray-600">Gestiona y revisa todas las solicitudes de material realizadas</p>
         </div>
 
         {solicitudes.length === 0 ? (
