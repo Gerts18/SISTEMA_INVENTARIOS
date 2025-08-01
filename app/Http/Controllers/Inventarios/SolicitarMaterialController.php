@@ -67,4 +67,37 @@ class SolicitarMaterialController extends Controller
             'message' => 'PDF URL actualizada correctamente'
         ]);
     }
+
+    public function getSolicitudes()
+    {
+        $solicitudes = SolicitudMaterial::with(['obra:obra_id,nombre', 'usuarioPideMaterial:id,name'])
+            ->select('solicitud_id', 'usuario_id', 'obra_id', 'fecha_solicitud', 'concepto', 'reporte_generado_url', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($solicitud) {
+                return [
+                    'solicitud_id' => $solicitud->solicitud_id,
+                    'fecha_solicitud' => $solicitud->fecha_solicitud,
+                    'concepto' => $solicitud->concepto,
+                    'reporte_generado_url' => $solicitud->reporte_generado_url,
+                    'created_at' => $solicitud->created_at,
+                    'obra' => [
+                        'obra_id' => $solicitud->obra->obra_id,
+                        'nombre' => $solicitud->obra->nombre,
+                    ],
+                    'usuario' => [
+                        'id' => $solicitud->usuarioPideMaterial->id,
+                        'name' => $solicitud->usuarioPideMaterial->name,
+                        'roles' => $solicitud->usuarioPideMaterial->getRoleNames(),
+                    ],
+                ];
+            });
+
+        return response()->json($solicitudes);
+    }
+
+    public function indexSolicitudes()
+    {
+        return inertia('Inventario/SolicitudesDeMaterial');
+    }
 }

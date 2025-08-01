@@ -44,6 +44,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
         Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
         Route::put('/solicitar-material/{solicitudId}/pdf-url', [SolicitarMaterialController::class, 'updatePdfUrl']);
+        
+        // Solicitudes de Material routes
+        Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
+        Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
 
     });
 
