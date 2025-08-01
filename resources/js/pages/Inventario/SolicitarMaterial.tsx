@@ -72,6 +72,11 @@ const SolicitarMaterial = () => {
     const lineHeight = 4
     const maxLineWidth = pageWidth - (margin * 2)
     
+    // Configuración para columnas
+    const columnsCount = 3
+    const columnGap = 5
+    const columnWidth = (maxLineWidth - (columnGap * (columnsCount - 1))) / columnsCount
+    
     let currentY = margin
     
     // funcion para verificar si necesitamos una nueva página
@@ -112,6 +117,97 @@ const SolicitarMaterial = () => {
       currentY += 1
     }
     
+    // Función para agregar contenido en columnas
+    const addColumnContent = (content: string, startY: number) => {
+      if (!content.trim()) {
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text('Sin contenido', margin, currentY)
+        currentY += lineHeight + 2
+        return currentY
+      }
+      
+      // Dividir contenido por líneas
+      const lines = content.split('\n').filter(line => line.trim())
+      if (lines.length === 0) {
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text('Sin contenido', margin, currentY)
+        currentY += lineHeight + 2
+        return currentY
+      }
+      
+      let tempY = currentY
+      let currentColumn = 0
+      
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      
+      lines.forEach((line, index) => {
+        const xPosition = margin + (currentColumn * (columnWidth + columnGap))
+        
+        // Verificar si la línea cabe en el ancho de la columna
+        const textWidth = doc.getTextWidth(line.trim())
+        if (textWidth <= columnWidth) {
+          // Si cabe, agregar tal como está
+          if (tempY + lineHeight > pageHeight - margin) {
+            doc.addPage()
+            tempY = margin
+          }
+          doc.text(line.trim(), xPosition, tempY)
+        } else {
+          // Si no cabe, dividir la línea
+          const words = line.trim().split(' ')
+          let currentLine = ''
+          
+          words.forEach((word, wordIndex) => {
+            const testLine = currentLine ? `${currentLine} ${word}` : word
+            const testWidth = doc.getTextWidth(testLine)
+            
+            if (testWidth <= columnWidth) {
+              currentLine = testLine
+            } else {
+              if (currentLine) {
+                // Imprimir la línea actual
+                if (tempY + lineHeight > pageHeight - margin) {
+                  doc.addPage()
+                  tempY = margin
+                }
+                doc.text(currentLine, xPosition, tempY)
+                tempY += lineHeight
+                currentColumn = (currentColumn + 1) % columnsCount
+                if (currentColumn === 0) tempY += 2 // Espacio extra al cambiar de fila
+              }
+              currentLine = word
+            }
+            
+            // Si es la última palabra, imprimir la línea
+            if (wordIndex === words.length - 1 && currentLine) {
+              if (tempY + lineHeight > pageHeight - margin) {
+                doc.addPage()
+                tempY = margin
+              }
+              const finalXPosition = margin + (currentColumn * (columnWidth + columnGap))
+              doc.text(currentLine, finalXPosition, tempY)
+            }
+          })
+        }
+        
+        // Mover a la siguiente posición
+        currentColumn = (currentColumn + 1) % columnsCount
+        if (currentColumn === 0) {
+          tempY += lineHeight + 2 // Nueva fila
+        }
+      })
+      
+      // Si no terminamos en la primera columna, agregar espacio para la siguiente línea
+      if (currentColumn !== 0) {
+        tempY += lineHeight + 2
+      }
+      
+      return tempY
+    }
+    
     // Header
     addTextWithPageBreak('SOLICITUD DE MATERIAL', pageWidth / 2, 18, 'bold')
     currentY += 10
@@ -146,29 +242,25 @@ const SolicitarMaterial = () => {
       doc.setFont('helvetica', 'bold')
       checkPageBreak(14 + 1)
       doc.text(section.title, margin, currentY)
-      currentY += 5 // Reducido espacio después del título
+      currentY += 8 // Espacio después del título
       
-      // Seccion del contenido (sin etiqueta "Contenido:")
-      const content = section.content || 'Sin contenido'
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      addMultilineText(content, margin, maxLineWidth)
-
+      // Agregar contenido en columnas
+      currentY = addColumnContent(section.content, currentY)
+      
       // Linea de firma
       checkPageBreak(10) 
       doc.setFontSize(10)
       doc.text('Nombre y Firma: ________________________', pageWidth - 140, currentY)
-      currentY += 5
+      currentY += 8
       
       // Agrega menos espacio entre secciones
       if (index < sections.length - 1) {
-        
         // Opcional: Línea de separación entre secciones
         if (currentY + 5 < pageHeight - margin) {
           doc.setDrawColor(200, 200, 200)
           doc.line(margin, currentY, pageWidth - margin, currentY)
           doc.setDrawColor(0, 0, 0) // Regresa el color a negro
-          currentY += 5
+          currentY += 8
         }
       }
     })
@@ -347,7 +439,7 @@ const SolicitarMaterial = () => {
             <button
               type="submit"
               disabled={loading || !selectedObra || !concepto.trim()}
-              className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
+              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
             >
               {loading ? 'Cargando...' : 'Enviar a bodega'}
             </button>
