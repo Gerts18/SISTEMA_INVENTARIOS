@@ -77,6 +77,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ObrasController::class, 'show'])->name('obras');
         Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');
         Route::patch('/{obra}/status', [ObrasController::class, 'updateStatus'])->name('obras.updateStatus');
+        Route::get('/{obra}/solicitudes', [ObrasController::class, 'getSolicitudes'])->name('obras.solicitudes');
 
     });
 

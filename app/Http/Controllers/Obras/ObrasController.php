@@ -141,4 +141,35 @@ class ObrasController extends Controller
             ])->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
         }
     }
+
+    public function getSolicitudes($obraId)
+    {
+        try {
+            $solicitudes = DB::table('solicitudes_material')
+                ->select(
+                    'solicitudes_material.solicitud_id',
+                    'solicitudes_material.fecha_solicitud',
+                    'solicitudes_material.concepto',
+                    'solicitudes_material.reporte_generado_url',
+                    'solicitudes_material.created_at',
+                    'users.name as usuario_name',
+                    'users.id as usuario_id'
+                )
+                ->join('users', 'solicitudes_material.usuario_id', '=', 'users.id')
+                ->where('solicitudes_material.obra_id', $obraId)
+                ->orderBy('solicitudes_material.created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'solicitudes' => $solicitudes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching solicitudes for obra: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener las solicitudes'
+            ], 500);
+        }
+    }
 }

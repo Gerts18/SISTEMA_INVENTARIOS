@@ -3,9 +3,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CalendarIcon, FileIcon, ExternalLinkIcon, CheckCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, ImageIcon } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CalendarIcon, FileIcon, ExternalLinkIcon, CheckCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, ImageIcon, UserIcon, ClipboardListIcon } from "lucide-react"
 import { useState, useEffect } from "react"
 import { router, usePage } from "@inertiajs/react"
+import { ViewSolicitudModal } from "./ViewSolicitudModal"
 
 interface Archivo {
     archivo_id: number;
@@ -29,12 +31,26 @@ interface ViewObraModalProps {
     onClose: () => void;
 }
 
+interface Solicitud {
+    solicitud_id: number;
+    fecha_solicitud: string;
+    concepto: string;
+    reporte_generado_url: string | null;
+    created_at: string;
+    usuario_name: string;
+    usuario_id: number;
+}
+
 export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
     const [currentObra, setCurrentObra] = useState<Obra | null>(obra);
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateMessage, setUpdateMessage] = useState<string | null>(null);
     const [previewFile, setPreviewFile] = useState<Archivo | null>(null);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+    const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
+    const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
+    const [isSolicitudModalOpen, setIsSolicitudModalOpen] = useState(false);
     
     const { props } = usePage();
 
@@ -70,6 +86,36 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
             setUpdateMessage(null);
         }
     }, [isOpen]);
+
+    // Fetch solicitudes when obra changes
+    useEffect(() => {
+        if (currentObra && isOpen) {
+            fetchSolicitudes();
+        }
+    }, [currentObra, isOpen]);
+
+    const fetchSolicitudes = async () => {
+        if (!currentObra) return;
+        
+        try {
+            setLoadingSolicitudes(true);
+            const response = await fetch(`/obras/${currentObra.obra_id}/solicitudes`);
+            const data = await response.json();
+            
+            if (data.success) {
+                setSolicitudes(data.solicitudes);
+            }
+        } catch (error) {
+            console.error('Error fetching solicitudes:', error);
+        } finally {
+            setLoadingSolicitudes(false);
+        }
+    };
+
+    const handleViewSolicitud = (solicitud: Solicitud) => {
+        setSelectedSolicitud(solicitud);
+        setIsSolicitudModalOpen(true);
+    };
 
     if (!currentObra) return null;
 
@@ -338,7 +384,63 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         )}
 
                         {/* Solicitudes de Material */}
-
+                        <div>
+                            <h3 className="font-semibold mb-3 flex items-center gap-2">
+                                <ClipboardListIcon className="h-4 w-4" />
+                                Solicitudes de Material
+                            </h3>
+                            
+                            {loadingSolicitudes ? (
+                                <div className="text-center py-4">
+                                    <p className="text-sm text-gray-500">Cargando solicitudes...</p>
+                                </div>
+                            ) : solicitudes.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {solicitudes.map((solicitud) => (
+                                        <Card key={solicitud.solicitud_id} className="hover:shadow-md transition-shadow">
+                                            <CardHeader className="pb-2">
+                                                <div className="flex justify-between items-start">
+                                                    <CardTitle className="text-base">
+                                                        Solicitud #{solicitud.solicitud_id}
+                                                    </CardTitle>
+                                                    <Badge variant={solicitud.reporte_generado_url ? "default" : "secondary"} className="text-xs">
+                                                        {solicitud.reporte_generado_url ? "Con PDF" : "Sin PDF"}
+                                                    </Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <CalendarIcon className="h-3 w-3" />
+                                                    <span>{new Date(solicitud.fecha_solicitud).toLocaleDateString('es-ES')}</span>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <UserIcon className="h-3 w-3" />
+                                                    <span className="truncate">{solicitud.usuario_name}</span>
+                                                </div>
+                                                
+                                                <div className="pt-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm" 
+                                                        className="w-full"
+                                                        onClick={() => handleViewSolicitud(solicitud)}
+                                                    >
+                                                        <EyeIcon className="h-3 w-3 mr-2" />
+                                                        Ver más
+                                                    </Button>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4">
+                                    <ClipboardListIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                    <p className="text-sm text-gray-500">No hay solicitudes de material para esta obra</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
@@ -411,6 +513,13 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Modal de Solicitud */}
+            <ViewSolicitudModal
+                solicitud={selectedSolicitud}
+                isOpen={isSolicitudModalOpen}
+                onClose={() => setIsSolicitudModalOpen(false)}
+            />
         </>
     );
 }
