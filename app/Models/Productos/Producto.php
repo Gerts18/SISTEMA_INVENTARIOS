@@ -16,7 +16,8 @@ class Producto extends Model
         'nombre',
         'codigo',
         'stock',
-        'precio_actual',
+        'precio_lista',
+        'precio_publico',
         'proveedor_id',
     ];
 
@@ -24,7 +25,8 @@ class Producto extends Model
         'nombre' => 'required|string|max:255',
         'codigo' => 'required|string|max:6|unique:productos,codigo',
         'stock' => 'integer|min:0',
-        'precio_actual' => 'required|numeric|min:0',
+        'precio_lista' => 'required|numeric|min:0',
+        'precio_publico' => 'required|numeric|min:0',
         'proveedor_id' => 'required|exists:proveedores,proveedor_id',
     ];
 
