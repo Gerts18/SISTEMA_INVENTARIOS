@@ -6,8 +6,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CalendarIcon, EyeIcon } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
 interface Archivo {
@@ -34,6 +36,8 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
     const [success, setSuccess] = useState(false);
     const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'todas' | 'en_progreso' | 'finalizada'>('en_progreso');
 
     const handleSuccess = () => {
         setSuccess(true);
@@ -67,12 +71,43 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
         }
     };
 
+    const normalize = (text: string) =>
+        (text || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+    const filteredObras = useMemo(() => {
+        let list = obras;
+
+        // Estado: en_progreso | finalizada | todas
+        if (statusFilter !== 'todas') {
+            list = list.filter(o => o.estado === statusFilter);
+        }
+
+        // Búsqueda por nombre (insensible a acentos)
+        if (searchTerm.trim()) {
+            const q = normalize(searchTerm);
+            list = list.filter(o => normalize(o.nombre).includes(q));
+        }
+
+        return list;
+    }, [obras, statusFilter, searchTerm]);
+
+    const emptyMessage = searchTerm.trim()
+        ? `No se encontraron obras para "${searchTerm}".`
+        : statusFilter === 'en_progreso'
+            ? 'No hay obras en progreso para mostrar.'
+            : statusFilter === 'finalizada'
+                ? 'No hay obras finalizadas para mostrar.'
+                : 'No hay obras para mostrar.';
+
     return (
         <AppLayout>
             <Head title="Obras" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min p-6">
+                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:minh-min p-6">
                     
                     {success && (
                         <Alert variant="default" className="mb-4 border-green-400 bg-green-100 text-green-700">
@@ -81,14 +116,32 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
                         </Alert>
                     )}
 
-                    <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mb-6">
                         <h1 className="text-2xl font-bold">Gestión de Obras</h1>
-                        <AddObraModal onSuccess={handleSuccess} />
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <Input
+                                placeholder="Buscar por nombre..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full md:w-64"
+                            />
+                            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todas' | 'en_progreso' | 'finalizada')}>
+                                <SelectTrigger className="w-full md:w-48">
+                                    <SelectValue placeholder="Estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="en_progreso">En progreso</SelectItem>
+                                    <SelectItem value="finalizada">Finalizadas</SelectItem>
+                                    <SelectItem value="todas">Ambas</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <AddObraModal onSuccess={handleSuccess} />
+                        </div>
                     </div>
 
-                    {obras && obras.length > 0 ? (
+                    {filteredObras.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {obras.map((obra) => (
+                            {filteredObras.map((obra) => (
                                 <Card key={obra.obra_id} className="hover:shadow-lg transition-shadow">
                                     <CardHeader>
                                         <div className="flex justify-between items-start">
@@ -133,9 +186,7 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
                         </div>
                     ) : (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground">
-                                No hay obras registradas aún.
-                            </p>
+                            <p className="text-muted-foreground">{emptyMessage}</p>
                         </div>
                     )}
                 </div>
