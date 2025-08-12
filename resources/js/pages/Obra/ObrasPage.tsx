@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useMemo, useState } from 'react'
 import { CalendarIcon, EyeIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
 interface Archivo {
@@ -36,6 +37,7 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
     const [selectedObra, setSelectedObra] = useState<Obra | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'todas' | 'en_progreso' | 'finalizada'>('en_progreso');
 
     const handleSuccess = () => {
         setSuccess(true);
@@ -76,19 +78,36 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
             .replace(/[\u0300-\u036f]/g, '');
 
     const filteredObras = useMemo(() => {
-        if (!searchTerm) return obras;
-        const q = normalize(searchTerm);
-        return obras.filter(o => normalize(o.nombre).includes(q));
-    }, [obras, searchTerm]);
+        let list = obras;
 
-    const hasObras = obras && obras.length > 0;
+        // Estado: en_progreso | finalizada | todas
+        if (statusFilter !== 'todas') {
+            list = list.filter(o => o.estado === statusFilter);
+        }
+
+        // Búsqueda por nombre (insensible a acentos)
+        if (searchTerm.trim()) {
+            const q = normalize(searchTerm);
+            list = list.filter(o => normalize(o.nombre).includes(q));
+        }
+
+        return list;
+    }, [obras, statusFilter, searchTerm]);
+
+    const emptyMessage = searchTerm.trim()
+        ? `No se encontraron obras para "${searchTerm}".`
+        : statusFilter === 'en_progreso'
+            ? 'No hay obras en progreso para mostrar.'
+            : statusFilter === 'finalizada'
+                ? 'No hay obras finalizadas para mostrar.'
+                : 'No hay obras para mostrar.';
 
     return (
         <AppLayout>
             <Head title="Obras" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min p-6">
+                <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:minh-min p-6">
                     
                     {success && (
                         <Alert variant="default" className="mb-4 border-green-400 bg-green-100 text-green-700">
@@ -106,68 +125,68 @@ const obrasPage = ({ obras }: ObrasPageProps) => {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full md:w-64"
                             />
+                            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'todas' | 'en_progreso' | 'finalizada')}>
+                                <SelectTrigger className="w-full md:w-48">
+                                    <SelectValue placeholder="Estado" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="en_progreso">En progreso</SelectItem>
+                                    <SelectItem value="finalizada">Finalizadas</SelectItem>
+                                    <SelectItem value="todas">Ambas</SelectItem>
+                                </SelectContent>
+                            </Select>
                             <AddObraModal onSuccess={handleSuccess} />
                         </div>
                     </div>
 
-                    {hasObras ? (
-                        filteredObras.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filteredObras.map((obra) => (
-                                    <Card key={obra.obra_id} className="hover:shadow-lg transition-shadow">
-                                        <CardHeader>
-                                            <div className="flex justify-between items-start">
-                                                <CardTitle className="text-lg line-clamp-2">
-                                                    {obra.nombre}
-                                                </CardTitle>
-                                                <Badge className={getEstadoColor(obra.estado)}>
-                                                    {getEstadoText(obra.estado)}
-                                                </Badge>
+                    {filteredObras.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredObras.map((obra) => (
+                                <Card key={obra.obra_id} className="hover:shadow-lg transition-shadow">
+                                    <CardHeader>
+                                        <div className="flex justify-between items-start">
+                                            <CardTitle className="text-lg line-clamp-2">
+                                                {obra.nombre}
+                                            </CardTitle>
+                                            <Badge className={getEstadoColor(obra.estado)}>
+                                                {getEstadoText(obra.estado)}
+                                            </Badge>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <CalendarIcon className="h-4 w-4" />
+                                                <span>
+                                                    {new Date(obra.fecha_inicio).toLocaleDateString('es-ES')}
+                                                </span>
                                             </div>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <CalendarIcon className="h-4 w-4" />
-                                                    <span>
-                                                        {new Date(obra.fecha_inicio).toLocaleDateString('es-ES')}
-                                                    </span>
-                                                </div>
-                                                
-                                                {obra.descripcion && (
-                                                    <p className="text-sm text-muted-foreground line-clamp-2">
-                                                        {obra.descripcion}
-                                                    </p>
-                                                )}
-                                                
-                                                <div className="pt-2">
-                                                    <Button 
-                                                        variant="outline" 
-                                                        size="sm" 
-                                                        className="w-full"
-                                                        onClick={() => handleViewObra(obra)}
-                                                    >
-                                                        <EyeIcon className="h-4 w-4 mr-2" />
-                                                        Ver más
-                                                    </Button>
-                                                </div>
+                                            
+                                            {obra.descripcion && (
+                                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                                    {obra.descripcion}
+                                                </p>
+                                            )}
+                                            
+                                            <div className="pt-2">
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    className="w-full"
+                                                    onClick={() => handleViewObra(obra)}
+                                                >
+                                                    <EyeIcon className="h-4 w-4 mr-2" />
+                                                    Ver más
+                                                </Button>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="text-center py-12">
-                                <p className="text-muted-foreground">
-                                    No se encontraron obras para "{searchTerm}".
-                                </p>
-                            </div>
-                        )
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
                     ) : (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground">
-                                No hay obras registradas aún.
-                            </p>
+                            <p className="text-muted-foreground">{emptyMessage}</p>
                         </div>
                     )}
                 </div>
