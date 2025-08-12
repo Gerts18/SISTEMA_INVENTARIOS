@@ -26,7 +26,8 @@ interface ProductFormData {
     nombre: string;
     codigo: string;
     stock: number;
-    precio_actual: string;
+    precio_lista: string;
+    precio_publico: string;
     categoria_id: string;
 }
 
@@ -38,7 +39,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
         nombre: '',
         codigo: '',
         stock: 0,
-        precio_actual: '',
+        precio_lista: '',
+        precio_publico: '',
         categoria_id: selectedCategoryId,
     });
 
@@ -49,11 +51,12 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
             ...formData,
             categoria_id: parseInt(formData.categoria_id),
             stock: Number(formData.stock),
-            precio_actual: parseFloat(formData.precio_actual),
+            precio_lista: parseFloat(formData.precio_lista),
+            precio_publico: parseFloat(formData.precio_publico),
         };
 
         try {
-            if (!payload.nombre || !payload.codigo || !payload.proveedor_id || !payload.precio_actual) {
+            if (!payload.nombre || !payload.codigo || !payload.proveedor_id || !payload.precio_lista || !payload.precio_publico) {
                 setFormError('Todos los campos son obligatorios.');
                 return;
             }
@@ -87,7 +90,8 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
                     nombre: '',
                     codigo: '',
                     stock: 0,
-                    precio_actual: '',
+                    precio_lista: '',
+                    precio_publico: '',
                     categoria_id: selectedCategoryId,
                 });
                 setFormError(null);
@@ -157,19 +161,32 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
                     </div>
 
                     <div className="flex gap-4">
+                        <div className="flex-1">
+                            <Label htmlFor="precio_lista">Precio de Lista</Label>
+                            <Input
+                                id="precio_lista"
+                                type="number"
+                                step="0.01"
+                                value={formData.precio_lista}
+                                onChange={(e) => setFormData({ ...formData, precio_lista: e.target.value })}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <Label htmlFor="precio_publico">Precio Público</Label>
+                            <Input
+                                id="precio_publico"
+                                type="number"
+                                step="0.01"
+                                value={formData.precio_publico}
+                                onChange={(e) => setFormData({ ...formData, precio_publico: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
                         <div className="flex flex-1 flex-col">
                             <Label htmlFor="stock">Cantidad</Label>
                             <Label className="mt-3 ml-10">0</Label>
-                        </div>
-                        <div className="flex-1">
-                            <Label htmlFor="precio_actual">Precio por unidad</Label>
-                            <Input
-                                id="precio_actual"
-                                type="number"
-                                step="0.01"
-                                value={formData.precio_actual}
-                                onChange={(e) => setFormData({ ...formData, precio_actual: e.target.value })}
-                            />
                         </div>
                     </div>
 
