@@ -54,6 +54,12 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
         }
     }
 
+    // Formateo seguro de precio para soportar string | number | undefined
+    const formatPrice = (val: any) => {
+        const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN
+        return Number.isFinite(num) ? `$${num.toFixed(2)}` : '-'
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -102,7 +108,16 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
                                             </div>
                                             <div>
                                                 <div className="font-medium">Categoria</div>
-                                                <div>{producto.categoria}</div>
+                                                <div>{(producto as any).categoria}</div>
+                                            </div>
+                                            {/* Nuevos: Precios */}
+                                            <div>
+                                                <div className="font-medium">Precio lista</div>
+                                                <div>{formatPrice((producto as any)?.precio_lista)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium">Precio público</div>
+                                                <div>{formatPrice((producto as any)?.precio_publico)}</div>
                                             </div>
                                         </div>
                                     </CardContent>

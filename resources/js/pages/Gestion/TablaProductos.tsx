@@ -39,6 +39,13 @@ const TablaProductos = ({
     onCantidadEntrada(codigo, newValue)
   }
 
+  // Helpers de precio para soportar string | number | undefined
+  const toNumber = (v: any) => typeof v === 'string' ? parseFloat(v) : (typeof v === 'number' ? v : NaN)
+  const formatPrice = (v: any) => {
+    const n = toNumber(v)
+    return Number.isFinite(n) ? `$${n.toFixed(2)}` : '-'
+  }
+
   return (
     <div>
       {Object.entries(productosPorCategoria).map(([categoria, productos]) => (
@@ -52,7 +59,9 @@ const TablaProductos = ({
                   <th className="px-2 py-1 border">Nombre</th>
                   <th className="px-2 py-1 border hidden sm:table-cell">Código</th>
                   <th className="px-2 py-1 border hidden md:table-cell">Cantidad disponible</th>
-                  <th className="px-2 py-1 border hidden md:table-cell">Precio</th>
+                  {/* Reemplazo: dos columnas de precio */}
+                  <th className="px-2 py-1 border hidden md:table-cell">Precio Lista</th>
+                  <th className="px-2 py-1 border hidden md:table-cell">Precio Público</th>
                   <th className="px-2 py-1 border">Proveedor</th>
                   <th className="px-2 py-1 border">{columnaCantidad}</th>
                   <th className="px-2 py-1 border"></th>
@@ -64,10 +73,14 @@ const TablaProductos = ({
                     <td className="px-2 py-1 border">{prod.nombre}</td>
                     <td className="px-2 py-1 border hidden sm:table-cell">{prod.codigo}</td>
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.stock}</td>
+                    {/* Nuevas celdas de precio */}
                     <td className="px-2 py-1 border hidden md:table-cell">
-                      {prod.precio_actual != null ? `$${prod.precio_actual} c/u` : '-'}
+                      {formatPrice((prod as any)?.precio_lista)}
                     </td>
-                    <td className="px-2 py-1 border">{prod.proveedor_nombre ?? '-'}</td>
+                    <td className="px-2 py-1 border hidden md:table-cell">
+                      {formatPrice((prod as any)?.precio_publico)}
+                    </td>
+                    <td className="px-2 py-1 border">{(prod as any).proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
                       <div className="flex items-center gap-1">
                         <Button
@@ -123,10 +136,13 @@ const TablaProductos = ({
                     <span className="font-medium">Disponible:</span> {prod.stock}
                   </div>
                   <div>
-                    <span className="font-medium">Precio:</span> {prod.precio_actual ?? '-'}
+                    <span className="font-medium">Precio lista:</span> {formatPrice((prod as any)?.precio_lista)}
                   </div>
                   <div>
-                    <span className="font-medium">Proveedor:</span> {prod.proveedor_nombre ?? '-'}
+                    <span className="font-medium">Precio público:</span> {formatPrice((prod as any)?.precio_publico)}
+                  </div>
+                  <div>
+                    <span className="font-medium">Proveedor:</span> {(prod as any).proveedor_nombre ?? '-'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
