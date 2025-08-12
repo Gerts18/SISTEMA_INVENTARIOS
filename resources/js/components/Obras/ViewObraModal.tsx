@@ -8,6 +8,7 @@ import { CalendarIcon, FileIcon, ExternalLinkIcon, CheckCircleIcon, DownloadIcon
 import { useState, useEffect } from "react"
 import { router, usePage } from "@inertiajs/react"
 import { ViewSolicitudModal } from "./ViewSolicitudModal"
+import { Textarea } from "@/components/ui/textarea"
 
 interface Archivo {
     archivo_id: number;
@@ -286,11 +287,13 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         {currentObra.descripcion && (
                             <div>
                                 <h3 className="font-semibold mb-2">Descripción</h3>
-                                <div className="bg-gray-50 rounded-lg p-4 border">
-                                    <p className="text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
-                                        {currentObra.descripcion}
-                                    </p>
-                                </div>
+                                <Textarea
+                                    readOnly
+                                    value={currentObra.descripcion}
+                                    rows={5}
+                                    className="w-full max-w-full resize-y bg-gray-50 border text-sm leading-relaxed"
+                                    style={{ overflowWrap: 'anywhere' }}
+                                />
                             </div>
                         )}
 
