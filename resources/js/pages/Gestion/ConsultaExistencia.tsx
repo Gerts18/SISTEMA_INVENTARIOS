@@ -33,6 +33,7 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
             setBuscado(true)
             if (data.found) {
                 setProducto(data.producto)
+                console.log("Producto encontrado:", data.producto)
             } else {
                 setProducto(undefined)
             }
@@ -52,12 +53,6 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
             setProductNumber("")
             setBuscado(false)
         }
-    }
-
-    // Formateo seguro de precio para soportar string | number | undefined
-    const formatPrice = (val: any) => {
-        const num = typeof val === 'string' ? parseFloat(val) : typeof val === 'number' ? val : NaN
-        return Number.isFinite(num) ? `$${num.toFixed(2)}` : '-'
     }
 
     return (
@@ -113,11 +108,19 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
                                             {/* Nuevos: Precios */}
                                             <div>
                                                 <div className="font-medium">Precio lista</div>
-                                                <div>{formatPrice((producto as any)?.precio_lista)}</div>
+                                                <div>
+                                                    {producto.precio_lista !== undefined && producto.precio_lista !== null
+                                                        ? `$${producto.precio_lista}`
+                                                        : '-'}
+                                                </div>
                                             </div>
                                             <div>
                                                 <div className="font-medium">Precio público</div>
-                                                <div>{formatPrice((producto as any)?.precio_publico)}</div>
+                                                <div>
+                                                    {producto.precio_publico !== undefined && producto.precio_publico !== null
+                                                        ? `$${producto.precio_publico}`
+                                                        : '-'}
+                                                </div>
                                             </div>
                                         </div>
                                     </CardContent>
