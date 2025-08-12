@@ -33,7 +33,6 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
             setBuscado(true)
             if (data.found) {
                 setProducto(data.producto)
-                console.log("Producto encontrado:", data.producto)
             } else {
                 setProducto(undefined)
             }

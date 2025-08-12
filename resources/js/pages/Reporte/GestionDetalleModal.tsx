@@ -123,8 +123,8 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                         <th className="text-left py-2">Nombre</th>
                                         <th className="text-left py-2">Código</th>
                                         <th className="text-right py-2">Cantidad</th>
-                                        <th className="text-right py-2">Precio Lista</th>
-                                        <th className="text-right py-2">Precio Público</th>
+                                        <th className="text-right py-2">P. Lista</th>
+                                        <th className="text-right py-2">P. Público</th>
                                     </tr>
                                 </thead>
                                 <tbody>
