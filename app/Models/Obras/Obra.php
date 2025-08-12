@@ -23,8 +23,8 @@ class Obra extends Model
         'nombre' => 'required|string|max:255',
         'descripcion' => 'nullable|string|max:500',
         'fecha_inicio' => 'required|date',
-        'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
-        'estado' => 'required|string|max:50|in:en_progreso,completada,pendiente',
+        'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+        'estado' => 'required|string|max:50|in:en_progreso,finalizada',
     ];
 
     public function solicitudes()

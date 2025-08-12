@@ -123,10 +123,8 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         switch (estado) {
             case 'en_progreso':
                 return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'completada':
+            case 'finalizada':
                 return 'bg-green-100 text-green-800 border-green-200';
-            case 'pendiente':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             default:
                 return 'bg-gray-100 text-gray-800 border-gray-200';
         }
@@ -136,10 +134,8 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         switch (estado) {
             case 'en_progreso':
                 return 'En Progreso';
-            case 'completada':
-                return 'Completada';
-            case 'pendiente':
-                return 'Pendiente';
+            case 'finalizada':
+                return 'Finalizada';
             default:
                 return estado;
         }
@@ -261,7 +257,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                 <Badge className={getEstadoColor(currentObra.estado)}>
                                     {getEstadoText(currentObra.estado)}
                             </Badge>
-                            {currentObra.estado === 'completada' && (
+                            {currentObra.estado === 'finalizada' && (
                                 <CheckCircleIcon className="h-5 w-5 text-green-600" />
                             )}
                             </div>
@@ -279,9 +275,8 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="pendiente">Pendiente</SelectItem>
                                         <SelectItem value="en_progreso">En Progreso</SelectItem>
-                                        <SelectItem value="completada">Completada</SelectItem>
+                                        <SelectItem value="finalizada">Finalizada</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -291,7 +286,11 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         {currentObra.descripcion && (
                             <div>
                                 <h3 className="font-semibold mb-2">Descripción</h3>
-                                <p className="text-muted-foreground">{currentObra.descripcion}</p>
+                                <div className="bg-gray-50 rounded-lg p-4 border">
+                                    <p className="text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
+                                        {currentObra.descripcion}
+                                    </p>
+                                </div>
                             </div>
                         )}
 
@@ -310,7 +309,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                 <div>
                                     <h3 className="font-semibold mb-2 flex items-center gap-2">
                                         <CalendarIcon className="h-4 w-4" />
-                                        Fecha de Finalización
+                                        Fecha Estimada de Finalización
                                     </h3>
                                     <p className="text-muted-foreground">
                                         {new Date(currentObra.fecha_fin).toLocaleDateString('es-ES')}

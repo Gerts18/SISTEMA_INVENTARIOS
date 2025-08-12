@@ -27,6 +27,7 @@ class ObrasController extends Controller
         $request->validate([
             'nombre' => 'required|string|max:255',
             'descripcion' => 'nullable|string|max:500',
+            'fecha_final' => 'required|date|after_or_equal:today',
         ]);
 
         //Checa que haya al menos un archivo
@@ -52,7 +53,7 @@ class ObrasController extends Controller
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
                 'fecha_inicio' => now()->toDateString(),
-                'fecha_fin' => null,
+                'fecha_fin' => $request->fecha_final,
                 'estado' => 'en_progreso',
             ]);
 
@@ -104,24 +105,14 @@ class ObrasController extends Controller
     public function updateStatus(Request $request, $obraId)
     {
         $request->validate([
-            'estado' => 'required|string|in:pendiente,en_progreso,completada',
+            'estado' => 'required|string|in:en_progreso,finalizada',
         ]);
 
         try {
             $obra = Obra::findOrFail($obraId);
             
-            $updateData = ['estado' => $request->estado];
-            
-            // Si el nuevo estado es 'completada', actualizar fecha_fin
-            if ($request->estado === 'completada') {
-                $updateData['fecha_fin'] = now()->toDateString();
-            }
-            // Si cambia de 'completada' a otro estado, limpiar fecha_fin
-            elseif ($obra->estado === 'completada' && $request->estado !== 'completada') {
-                $updateData['fecha_fin'] = null;
-            }
-            
-            $obra->update($updateData);
+            // Solo actualizar el estado, sin modificar fechas
+            $obra->update(['estado' => $request->estado]);
             
             // Obtener todas las obras actualizadas para devolver a la vista
             $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
@@ -173,3 +164,4 @@ class ObrasController extends Controller
         }
     }
 }
+  

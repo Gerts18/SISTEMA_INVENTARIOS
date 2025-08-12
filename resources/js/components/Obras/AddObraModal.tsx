@@ -9,6 +9,7 @@ import { CirclePlus } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import MultiFileUpload from '@/components/Files/MultiFileUpload';
 import axios from 'axios';
+import { router } from '@inertiajs/react';
 
 interface AddObraModalProps {
     onSuccess: () => void;
@@ -17,6 +18,7 @@ interface AddObraModalProps {
 interface ObraFormData {
     nombre: string;
     descripcion: string;
+    fecha_final: string;
 }
 
 export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
@@ -26,6 +28,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const [formData, setFormData] = useState<ObraFormData>({
         nombre: '',
         descripcion: '',
+        fecha_final: '',
     });
     const [selectedFiles, setSelectedFiles] = useState<(File | null)[]>([null, null, null]);
 
@@ -33,8 +36,9 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const isFormValid = useMemo(() => {
         const hasFiles = selectedFiles.some(file => file !== null);
         const hasName = formData.nombre.trim().length > 0;
-        return hasFiles && hasName && !isSubmitting;
-    }, [selectedFiles, formData.nombre, isSubmitting]);
+        const hasFechaFinal = formData.fecha_final.trim().length > 0;
+        return hasFiles && hasName && hasFechaFinal && !isSubmitting;
+    }, [selectedFiles, formData.nombre, formData.fecha_final, isSubmitting]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -51,6 +55,19 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
             return;
         }
 
+        if (!formData.fecha_final.trim()) {
+            setFormError('La fecha estimada de finalización es obligatoria.');
+            return;
+        }
+
+        // Validate fecha_final is not in the past
+        const today = new Date();
+        const selectedDate = new Date(formData.fecha_final);
+        if (selectedDate < today) {
+            setFormError('La fecha estimada de finalización no puede ser anterior a hoy.');
+            return;
+        }
+
         setFormError(null);
         setIsSubmitting(true);
 
@@ -58,6 +75,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         const formDataToSend = new FormData();
         formDataToSend.append('nombre', formData.nombre);
         formDataToSend.append('descripcion', formData.descripcion);
+        formDataToSend.append('fecha_final', formData.fecha_final);
         
         // Add files
         validFiles.forEach((file, index) => {
@@ -83,9 +101,13 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                 setFormData({
                     nombre: '',
                     descripcion: '',
+                    fecha_final: '',
                 });
                 setSelectedFiles([null, null, null]);
                 setFormError(null);
+
+                // Refresh the page to show the new obra
+                router.reload({ only: ['obras'] });
             } else {
                 setFormError(response.data.message || 'Error al crear la obra');
             }
@@ -123,6 +145,25 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         }
     };
 
+    const handleDescripcionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const newDescripcion = e.target.value;
+        if (newDescripcion.length <= 500) {
+            setFormData({ ...formData, descripcion: newDescripcion });
+        }
+    };
+
+    const handleFechaFinalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newFecha = e.target.value;
+        setFormData({ ...formData, fecha_final: newFecha });
+        // Clear form error when date is added
+        if (newFecha.trim() && formError) {
+            setFormError(null);
+        }
+    };
+
+    // Get today's date in YYYY-MM-DD format for min date
+    const today = new Date().toISOString().split('T')[0];
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -158,13 +199,31 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                     </div>
 
                     <div>
-                        <Label htmlFor="descripcion">Descripción</Label>
+                        <Label htmlFor="descripcion">
+                            Descripción 
+                            <span className="text-sm text-gray-500 ml-2">
+                                ({formData.descripcion.length}/500 caracteres)
+                            </span>
+                        </Label>
                         <Textarea 
                             id="descripcion" 
                             value={formData.descripcion} 
-                            onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                            onChange={handleDescripcionChange}
                             placeholder="Descripción detallada de la obra (opcional)"
                             rows={3}
+                            className={formData.descripcion.length >= 450 ? 'border-orange-300' : ''}
+                        />
+                    </div>
+
+                    <div>
+                        <Label htmlFor="fecha_final">Fecha estimada de finalización <span className="text-red-500">*</span></Label>
+                        <Input 
+                            id="fecha_final" 
+                            type="date"
+                            value={formData.fecha_final} 
+                            onChange={handleFechaFinalChange}
+                            min={today}
+                            required
                         />
                     </div>
 
