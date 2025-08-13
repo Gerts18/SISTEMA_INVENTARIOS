@@ -46,7 +46,7 @@ class InventariosController extends Controller
     public function productosPorProveedor($proveedor_id)
     {
         $productos = Producto::where('proveedor_id', $proveedor_id)
-            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_actual', 'proveedor_id')
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico', 'proveedor_id')
             ->simplePaginate(10);
         
         return response()->json([
@@ -64,7 +64,7 @@ class InventariosController extends Controller
     {
         $productos = Producto::join('proveedores', 'productos.proveedor_id', '=', 'proveedores.proveedor_id')
             ->where('proveedores.categoria_id', $categoria_id)
-            ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_actual')
+            ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_lista', 'productos.precio_publico')
             ->simplePaginate(10);
         
         return response()->json([
@@ -116,33 +116,36 @@ class InventariosController extends Controller
         return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');    }
 
     public function store(Request $request)
-{
-    $messages = [
-        'nombre.required' => 'El nombre del proveedor es obligatorio.',
-        'codigo.required' => 'El código del producto es obligatorio.',
-        'codigo.max' => 'El código no debe ser mayor a 6 caracteres.',
-        'codigo.unique' => 'Este código ya está en uso.',
-        'stock.integer' => 'La cantidad debe ser un número entero.',
-        'stock.min' => 'La cantidad no puede ser negativa.',
-        'precio_actual.required' => 'El precio es obligatorio.',
-        'precio_actual.numeric' => 'El precio debe ser un número.',
-        'precio_actual.min' => 'El precio debe ser mayor o igual a 0.',
-        'categoria_id.required' => 'Debe seleccionar una categoría.',
-        'categoria_id.exists' => 'La categoría seleccionada no existe.',
-    ];
+    {
+        $messages = [
+            'nombre.required' => 'El nombre del proveedor es obligatorio.',
+            'codigo.required' => 'El código del producto es obligatorio.',
+            'codigo.max' => 'El código no debe ser mayor a 6 caracteres.',
+            'codigo.unique' => 'Este código ya está en uso.',
+            'stock.integer' => 'La cantidad debe ser un número entero.',
+            'stock.min' => 'La cantidad no puede ser negativa.',
+            'precio_lista.required' => 'El precio de lista es obligatorio.',
+            'precio_lista.numeric' => 'El precio de lista debe ser un número.',
+            'precio_lista.min' => 'El precio de lista debe ser mayor o igual a 0.',
+            'precio_publico.required' => 'El precio público es obligatorio.',
+            'precio_publico.numeric' => 'El precio público debe ser un número.',
+            'precio_publico.min' => 'El precio público debe ser mayor o igual a 0.',
+            'categoria_id.required' => 'Debe seleccionar una categoría.',
+            'categoria_id.exists' => 'La categoría seleccionada no existe.',
+        ];
 
-    // Validación con mensajes personalizados
-    $request->validate([
-        'nombre' => 'required|string|max:255',
-        'codigo' => 'required|string|max:6|unique:productos,codigo',
-        'stock' => 'integer|min:0',
-        'precio_actual' => 'required|numeric|min:0',
-        'proveedor_id' => 'required|exists:proveedores,proveedor_id',
-    ], $messages);
+        // Validación con mensajes personalizados
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'codigo' => 'required|string|max:6|unique:productos,codigo',
+            'stock' => 'integer|min:0',
+            'precio_lista' => 'required|numeric|min:0',
+            'precio_publico' => 'required|numeric|min:0',
+            'proveedor_id' => 'required|exists:proveedores,proveedor_id',
+        ], $messages);
 
-    Producto::create($request->all());
+        Producto::create($request->all());
 
-    return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
-}
-
+        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
+    }
 }

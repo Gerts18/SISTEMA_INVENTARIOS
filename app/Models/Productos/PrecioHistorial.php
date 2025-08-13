@@ -13,7 +13,8 @@ class PrecioHistorial extends Model
     protected $fillable = [
         'producto_id', 
         'precio', 
-        'fecha_cambio'
+        'fecha_cambio',
+        'tipo_cambio'
     ];
 
     public function producto()

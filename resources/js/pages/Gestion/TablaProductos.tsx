@@ -52,7 +52,9 @@ const TablaProductos = ({
                   <th className="px-2 py-1 border">Nombre</th>
                   <th className="px-2 py-1 border hidden sm:table-cell">Código</th>
                   <th className="px-2 py-1 border hidden md:table-cell">Cantidad disponible</th>
-                  <th className="px-2 py-1 border hidden md:table-cell">Precio</th>
+                  {/* Reemplazo: dos columnas de precio */}
+                  <th className="px-2 py-1 border hidden md:table-cell">Precio Lista</th>
+                  <th className="px-2 py-1 border hidden md:table-cell">Precio Público</th>
                   <th className="px-2 py-1 border">Proveedor</th>
                   <th className="px-2 py-1 border">{columnaCantidad}</th>
                   <th className="px-2 py-1 border"></th>
@@ -64,10 +66,18 @@ const TablaProductos = ({
                     <td className="px-2 py-1 border">{prod.nombre}</td>
                     <td className="px-2 py-1 border hidden sm:table-cell">{prod.codigo}</td>
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.stock}</td>
+                    {/* Nuevas celdas de precio */}
                     <td className="px-2 py-1 border hidden md:table-cell">
-                      {prod.precio_actual != null ? `$${prod.precio_actual} c/u` : '-'}
+                      {(prod as any)?.precio_lista !== undefined && (prod as any)?.precio_lista !== null
+                        ? `$${(prod as any).precio_lista}`
+                        : '-'}
                     </td>
-                    <td className="px-2 py-1 border">{prod.proveedor_nombre ?? '-'}</td>
+                    <td className="px-2 py-1 border hidden md:table-cell">
+                      {(prod as any)?.precio_publico !== undefined && (prod as any)?.precio_publico !== null
+                        ? `$${(prod as any).precio_publico}`
+                        : '-'}
+                    </td>
+                    <td className="px-2 py-1 border">{(prod as any).proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
                       <div className="flex items-center gap-1">
                         <Button
@@ -123,10 +133,19 @@ const TablaProductos = ({
                     <span className="font-medium">Disponible:</span> {prod.stock}
                   </div>
                   <div>
-                    <span className="font-medium">Precio:</span> {prod.precio_actual ?? '-'}
+                    <span className="font-medium">Precio lista:</span>{" "}
+                    {(prod as any)?.precio_lista !== undefined && (prod as any)?.precio_lista !== null
+                      ? `$${(prod as any).precio_lista}`
+                      : '-'}
                   </div>
                   <div>
-                    <span className="font-medium">Proveedor:</span> {prod.proveedor_nombre ?? '-'}
+                    <span className="font-medium">Precio público:</span>{" "}
+                    {(prod as any)?.precio_publico !== undefined && (prod as any)?.precio_publico !== null
+                      ? `$${(prod as any).precio_publico}`
+                      : '-'}
+                  </div>
+                  <div>
+                    <span className="font-medium">Proveedor:</span> {(prod as any).proveedor_nombre ?? '-'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">

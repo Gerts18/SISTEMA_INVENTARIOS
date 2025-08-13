@@ -32,6 +32,9 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
     // Estado para saber qué mostrar
     const [view, setView] = useState<"catalogo" | "solicitudes">("catalogo")
 
+    // Nuevo estado para alternar sub-vista de solicitudes cuando es Administrador
+    const [adminSolicitudesView, setAdminSolicitudesView] = useState<"lista" | "solicitar">("lista")
+
     return (
         <AppLayout>
             <Head title="Catálogo" />
@@ -52,7 +55,40 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
 
                     {view === "catalogo" && <CatalogoInventario/>} 
 
-                    {view === "solicitudes" && (userRole === 'Bodega' || userRole === 'Administrador') && (
+                    {/* Toggle para Administrador */}
+                    {view === "solicitudes" && userRole === 'Administrador' && (
+                        <div className="flex flex-col h-full w-full">
+                            <div className="flex gap-2 p-3 border-b bg-muted/40">
+                                <button
+                                    onClick={() => setAdminSolicitudesView("lista")}
+                                    className={`px-3 py-1.5 text-sm rounded-md border transition ${
+                                        adminSolicitudesView === "lista"
+                                            ? "bg-primary text-white border-primary"
+                                            : "bg-background hover:bg-accent"
+                                    }`}
+                                >
+                                    Solicitudes
+                                </button>
+                                <button
+                                    onClick={() => setAdminSolicitudesView("solicitar")}
+                                    className={`px-3 py-1.5 text-sm rounded-md border transition ${
+                                        adminSolicitudesView === "solicitar"
+                                            ? "bg-primary text-white border-primary"
+                                            : "bg-background hover:bg-accent"
+                                    }`}
+                                >
+                                    Solicitar Material
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-auto">
+                                {adminSolicitudesView === "lista" && <SolicitudesDeMaterial />}
+                                {adminSolicitudesView === "solicitar" && <SolicitarMaterial />}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Roles no administradores conservan lógica previa */}
+                    {view === "solicitudes" && userRole === 'Bodega' && (
                         <SolicitudesDeMaterial />
                     )}
 

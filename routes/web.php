@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Files\FilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Inventarios\InventariosController;
+use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
+use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
 
 
@@ -35,8 +38,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
+        
+        // Solicitar Material routes
+        Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
+        Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
+        Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
+        Route::put('/solicitar-material/{solicitudId}/pdf-url', [SolicitarMaterialController::class, 'updatePdfUrl']);
+        
+        // Solicitudes de Material routes
+        Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
+        Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
 
     });
+
+    Route::post('/files/solicitud-material/{solicitudId}/{obraId}/{nombreObra}', [FilesController::class, 'subirPDFSolicitudMaterial'])->middleware(['auth', 'verified']);
 
     //Rutas para la gestión de inventario (Entradas y Salidas de productos)
     Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
@@ -55,6 +70,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ReportesController::class, 'show'])->name('reportes');
 
     });
+
+    //Reportes de inventario
+    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño']], function () {
+
+        Route::get('/', [ObrasController::class, 'show'])->name('obras');
+        Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');
+        Route::patch('/{obra}/status', [ObrasController::class, 'updateStatus'])->name('obras.updateStatus');
+        Route::get('/{obra}/solicitudes', [ObrasController::class, 'getSolicitudes'])->name('obras.solicitudes');
+
+    });
+
+
 });
 
 require __DIR__ . '/settings.php';

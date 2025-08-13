@@ -123,21 +123,30 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                         <th className="text-left py-2">Nombre</th>
                                         <th className="text-left py-2">Código</th>
                                         <th className="text-right py-2">Cantidad</th>
-                                        <th className="text-right py-2">Precio</th>
+                                        <th className="text-right py-2">P. Lista</th>
+                                        <th className="text-right py-2">P. Público</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {gestion.cambios_producto.map((cambio) => {
-                                        let precio = cambio.producto?.precio_actual
-                                        let precioNum = typeof precio === "string" ? parseFloat(precio) : precio
+                                        let precioLista = cambio.producto?.precio_lista
+                                        let precioPublico = cambio.producto?.precio_publico
+                                        let precioListaNum = typeof precioLista === "string" ? parseFloat(precioLista) : precioLista
+                                        let precioPublicoNum = typeof precioPublico === "string" ? parseFloat(precioPublico) : precioPublico
+                                        
                                         return (
                                             <tr key={cambio.cambio_producto_id} className="border-b">
                                                 <td className="py-2">{cambio.producto?.nombre}</td>
                                                 <td className="py-2">{cambio.producto?.codigo}</td>
                                                 <td className="text-right py-2">{cambio.cantidad}</td>
                                                 <td className="text-right py-2">
-                                                    {typeof precioNum === "number" && !isNaN(precioNum)
-                                                        ? `$${precioNum.toFixed(2)}`
+                                                    {typeof precioListaNum === "number" && !isNaN(precioListaNum)
+                                                        ? `$${precioListaNum.toFixed(2)}`
+                                                        : "-"}
+                                                </td>
+                                                <td className="text-right py-2">
+                                                    {typeof precioPublicoNum === "number" && !isNaN(precioPublicoNum)
+                                                        ? `$${precioPublicoNum.toFixed(2)}`
                                                         : "-"}
                                                 </td>
                                             </tr>

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedInteger('producto_id');
             $table->decimal('precio');
             $table->date('fecha_cambio');
+            $table->string('tipo_cambio');
             $table->timestamps();
 
             $table->foreign('producto_id')->references('producto_id')->on('productos')->onDelete('cascade');

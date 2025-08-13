@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('nombre', 255);
             $table->string('codigo',6)->unique();
             $table->unsignedInteger('stock')->default(0);
-            $table->decimal('precio_actual',10,2)->unsigned();
+            $table->decimal('precio_lista',10,2)->unsigned();
+            $table->decimal('precio_publico',10,2)->unsigned();
             $table->unsignedInteger('proveedor_id');
             $table->timestamps();
 

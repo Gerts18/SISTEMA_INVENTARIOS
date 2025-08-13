@@ -102,7 +102,24 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
                                             </div>
                                             <div>
                                                 <div className="font-medium">Categoria</div>
-                                                <div>{producto.categoria}</div>
+                                                <div>{(producto as any).categoria}</div>
+                                            </div>
+                                            {/* Nuevos: Precios */}
+                                            <div>
+                                                <div className="font-medium">Precio lista</div>
+                                                <div>
+                                                    {producto.precio_lista !== undefined && producto.precio_lista !== null
+                                                        ? `$${producto.precio_lista}`
+                                                        : '-'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div className="font-medium">Precio público</div>
+                                                <div>
+                                                    {producto.precio_publico !== undefined && producto.precio_publico !== null
+                                                        ? `$${producto.precio_publico}`
+                                                        : '-'}
+                                                </div>
                                             </div>
                                         </div>
                                     </CardContent>

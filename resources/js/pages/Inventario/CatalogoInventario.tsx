@@ -13,8 +13,8 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
 import { CirclePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {PageProps} from '@/types/auth'
-import {Head, usePage } from '@inertiajs/react';
+import { PageProps } from '@/types/auth'
+import { Head, usePage } from '@inertiajs/react';
 
 type Categoria = {
     categoria_id: string;
@@ -33,7 +33,8 @@ type Producto = {
     nombre: string;
     codigo: string;
     stock: number;
-    precio_actual: number;
+    precio_lista: number;
+    precio_publico: number;
     categoria_id: string | number;
 };
 
