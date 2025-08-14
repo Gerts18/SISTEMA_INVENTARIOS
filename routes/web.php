@@ -10,6 +10,7 @@ use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
+use App\Http\Controllers\Productos\ProductosController;
 
 
 Route::get('/', function () {
@@ -48,6 +49,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Solicitudes de Material routes
         Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
         Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
+
+        // Rutas para productos
+        Route::post('/productos', [ProductosController::class, 'store'])->name('productos.store');
+        Route::patch('/productos/{id}', [ProductosController::class, 'update'])->name('productos.update');
+        Route::get('/productos/{id}/historial-precios', [ProductosController::class, 'obtenerHistorialPrecios'])->name('productos.historial-precios');
 
     });
 
