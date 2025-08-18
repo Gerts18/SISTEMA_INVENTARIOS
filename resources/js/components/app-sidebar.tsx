@@ -18,7 +18,7 @@ const mainNavItems: NavItem[] = [
         title: 'Inventario',
         href: '/inventario',
         icon: Package,
-        permissions: 'role:Administrador|Diseño|Bodega'
+        permissions: 'role:Administrador|Diseño|Bodega|Checador'
     },
     {
         title: 'Entradas/Salidas',
@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
         title: 'Reportes',
         href: '/reportes',
         icon: BookOpen,
-        permissions: 'role:Administrador'
+        permissions: 'role:Administrador|Checador'
     },
     {
         title: 'Obras',
