@@ -92,6 +92,10 @@ const InventarioPage = ({ contador }: InventarioPageProps) => {
                         <SolicitudesDeMaterial />
                     )}
 
+                    {view === "solicitudes" && userRole === 'Checador' && (
+                        <SolicitudesDeMaterial />
+                    )}
+
                     {view === "solicitudes" && userRole === 'Diseño' && (
                         <SolicitarMaterial />
                     )}
