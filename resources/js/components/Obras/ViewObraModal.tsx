@@ -445,22 +445,20 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                         <Table>
                                             <TableHeader>
                                                 <TableRow>
-                                                    <TableHead>Fecha</TableHead>
-                                                    <TableHead>Concepto</TableHead>
-                                                    <TableHead>Creado</TableHead>
+                                                    <TableHead className="w-[120px]">Fecha</TableHead>
+                                                    <TableHead className="w-[200px]">Concepto</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
                                                 {registros.map((registro) => (
                                                     <TableRow key={registro.id}>
-                                                        <TableCell className="font-medium">
+                                                        <TableCell className="font-medium align-top whitespace-nowrap w-[120px]">
                                                             {new Date(registro.fecha).toLocaleDateString('es-ES')}
                                                         </TableCell>
-                                                        <TableCell className="max-w-md">
-                                                            <span className="break-words">{registro.concepto}</span>
-                                                        </TableCell>
-                                                        <TableCell className="text-sm text-muted-foreground">
-                                                            {new Date(registro.created_at).toLocaleDateString('es-ES')}
+                                                        <TableCell className="align-top w-[200px] max-w-[200px]">
+                                                            <div className="break-words whitespace-normal hyphens-auto leading-relaxed text-sm">
+                                                                {registro.concepto}
+                                                            </div>
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -704,3 +702,4 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         </>
     );
 }
+   
