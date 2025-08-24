@@ -36,4 +36,9 @@ class Obra extends Model
     {
         return $this->hasMany(ArchivoObra::class, 'obra_id', 'obra_id');
     }
+
+    public function registros()
+    {
+        return $this->hasMany(RegistroObra::class, 'obra_id', 'obra_id');
+    }
 }

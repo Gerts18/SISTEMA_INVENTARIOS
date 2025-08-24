@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Files\FilesController;
 use App\Models\Obras\Obra;
 use App\Models\Obras\ArchivoObra;
+use App\Models\Obras\RegistroObra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -163,5 +164,56 @@ class ObrasController extends Controller
             ], 500);
         }
     }
+
+    public function getRegistros($obraId)
+    {
+        try {
+            $registros = RegistroObra::where('obra_id', $obraId)
+                ->orderBy('fecha', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'registros' => $registros
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching registros for obra: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener los registros'
+            ], 500);
+        }
+    }
+
+    public function storeRegistro(Request $request, $obraId)
+    {
+        $request->validate([
+            'fecha' => 'required|date',
+            'concepto' => 'required|string|max:100',
+        ]);
+
+        try {
+            // Verificar que la obra existe
+            $obra = Obra::findOrFail($obraId);
+            
+            $registro = RegistroObra::create([
+                'obra_id' => $obraId,
+                'fecha' => $request->fecha,
+                'concepto' => $request->concepto,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'registro' => $registro,
+                'message' => 'Registro creado correctamente'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error creating registro for obra: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el registro'
+            ], 500);
+        }
+    }
 }
-  

@@ -78,6 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');
         Route::patch('/{obra}/status', [ObrasController::class, 'updateStatus'])->name('obras.updateStatus');
         Route::get('/{obra}/solicitudes', [ObrasController::class, 'getSolicitudes'])->name('obras.solicitudes');
+        Route::get('/{obra}/registros', [ObrasController::class, 'getRegistros'])->name('obras.registros');
+        Route::post('/{obra}/registros', [ObrasController::class, 'storeRegistro'])->name('obras.registros.store');
 
     });
 
