@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Gestion\GestionInventario;
+use App\Models\Reportes\Reporte;
 use Carbon\Carbon;
 
 /*
@@ -24,6 +25,7 @@ class ReportesController extends Controller
     {
         $fecha = $request->get('fecha', Carbon::today()->format('Y-m-d'));
         
+        // Gestiones de inventario
         $gestiones = GestionInventario::with([
             'usuario.roles',
             'cambiosProducto.producto'
@@ -33,17 +35,37 @@ class ReportesController extends Controller
         ->orderBy('created_at', 'desc')
         ->get();
 
-        // Obtener las fechas disponibles en el inventario       
-        $fechasDisponibles = GestionInventario::selectRaw('DATE(fecha) as fecha')
+        // Reportes de área
+        $reportes = Reporte::with([
+            'usuario.roles',
+            'obra'
+        ])
+        ->whereDate('fecha', $fecha)
+        ->orderBy('fecha', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        // Obtener las fechas disponibles de ambas tablas
+        $fechasGestiones = GestionInventario::selectRaw('DATE(fecha) as fecha')
             ->distinct()
-            ->orderBy('fecha', 'desc')
-            ->pluck('fecha')
+            ->pluck('fecha');
+            
+        $fechasReportes = Reporte::selectRaw('DATE(fecha) as fecha')
+            ->distinct()
+            ->pluck('fecha');
+
+        $fechasDisponibles = $fechasGestiones->merge($fechasReportes)
+            ->unique()
+            ->sort()
+            ->reverse()
+            ->values()
             ->map(function($fecha) {
                 return Carbon::parse($fecha)->format('Y-m-d');
             });
 
         return Inertia::render('Reporte/ReportesPage', [
             'gestiones' => $gestiones,
+            'reportes' => $reportes,
             'fechaSeleccionada' => $fecha,
             'fechasDisponibles' => $fechasDisponibles
         ]);
