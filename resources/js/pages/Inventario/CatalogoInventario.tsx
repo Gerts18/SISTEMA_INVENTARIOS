@@ -2,14 +2,15 @@
 
 import { AddProductModal } from '@/components/inventory/AddProductModal';
 import { ProductTable } from '@/components/inventory/ProductTable';
+import { EditProductForm } from '@/components/inventory/EditProductForm';
+import { PriceHistory } from '@/components/inventory/PriceHistory';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { router } from '@inertiajs/react';
-import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
 import { CirclePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -69,6 +70,61 @@ const CatalogoInventario = () => {
         categoria_id: '',
     });
 
+    // Estados para el modal inteligente
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        type: 'edit' | 'history' | null;
+        producto: Producto | null;
+    }>({
+        isOpen: false,
+        type: null,
+        producto: null
+    });
+
+    // Funciones para manejar las acciones del menú contextual
+    const handleEditProduct = (producto: Producto) => {
+        // Pequeño delay para evitar conflictos de focus
+        setTimeout(() => {
+            setModalState({
+                isOpen: true,
+                type: 'edit',
+                producto
+            });
+        }, 100);
+    };
+
+    const handleViewHistory = (producto: Producto) => {
+        // Pequeño delay para evitar conflictos de focus
+        setTimeout(() => {
+            setModalState({
+                isOpen: true,
+                type: 'history',
+                producto
+            });
+        }, 100);
+    };
+
+    const handleModalClose = () => {
+        setModalState({
+            isOpen: false,
+            type: null,
+            producto: null
+        });
+    };
+
+    const handleProductUpdateSuccess = () => {
+        // Refrescar la lista de productos después de actualizar
+        if (selectedCategoryId) {
+            fetchProductsByCategory(selectedCategoryId);
+        } else if (selectedProviderId) {
+            fetchProductsByProvider(selectedProviderId);
+        }
+
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        handleModalClose();
+    };
+
     const fetchProveedores = () => {
         axios
             .get('/inventario/proveedores')
@@ -123,10 +179,6 @@ const CatalogoInventario = () => {
             });
         });
     };
-
-    useEffect(() => {
-        console.log('selectedCategoryId cambió a:', selectedCategoryId);
-    }, [selectedCategoryId]);
 
     const searchProductById = () => {
         if (!productoId) {
@@ -419,10 +471,74 @@ const CatalogoInventario = () => {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <ProductTable productos={productos} />
+                        <ProductTable
+                            productos={productos}
+                            onEditProduct={handleEditProduct}
+                            onViewHistory={handleViewHistory}
+                        />
                     </div>
                 </div>
             </div>
+
+            {/* Modal inteligente para editar productos y ver historial */}
+            <Dialog open={modalState.isOpen} onOpenChange={handleModalClose}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <DialogTitle>
+                                    {modalState.type === 'edit' ? 'Editar Producto' : 'Historial de Precios'}
+                                    {modalState.producto && (
+                                        <span className="text-sm font-normal text-muted-foreground ml-2">
+                                            - {modalState.producto.nombre}
+                                        </span>
+                                    )}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    {modalState.type === 'edit'
+                                        ? 'Modifica la información del producto. Los cambios de precio se guardarán automáticamente en el historial.'
+                                        : 'Visualiza todos los cambios de precio realizados a este producto.'
+                                    }
+                                </DialogDescription>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant={modalState.type === 'edit' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setModalState(prev => ({ ...prev, type: 'edit' }))}
+                                    disabled={!modalState.producto}
+                                >
+                                    Editar
+                                </Button>
+                                <Button
+                                    variant={modalState.type === 'history' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setModalState(prev => ({ ...prev, type: 'history' }))}
+                                    disabled={!modalState.producto}
+                                >
+                                    Historial
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="mt-4">
+                        {modalState.type === 'edit' && modalState.producto && (
+                            <EditProductForm
+                                producto={modalState.producto}
+                                onSuccess={handleProductUpdateSuccess}
+                                onCancel={handleModalClose}
+                            />
+                        )}
+
+                        {modalState.type === 'history' && modalState.producto && (
+                            <PriceHistory
+                                productoId={modalState.producto.producto_id}
+                            />
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

@@ -47,6 +47,7 @@ class InventariosController extends Controller
     {
         $productos = Producto::where('proveedor_id', $proveedor_id)
             ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico', 'proveedor_id')
+            ->orderBy('created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
             ->simplePaginate(10);
         
         return response()->json([
@@ -65,6 +66,7 @@ class InventariosController extends Controller
         $productos = Producto::join('proveedores', 'productos.proveedor_id', '=', 'proveedores.proveedor_id')
             ->where('proveedores.categoria_id', $categoria_id)
             ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_lista', 'productos.precio_publico')
+            ->orderBy('productos.created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
             ->simplePaginate(10);
         
         return response()->json([
