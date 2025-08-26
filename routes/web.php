@@ -10,7 +10,7 @@ use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
-
+use App\Http\Controllers\ReportesArea\ReportesAreaController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -80,9 +80,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{obra}/solicitudes', [ObrasController::class, 'getSolicitudes'])->name('obras.solicitudes');
         Route::get('/{obra}/registros', [ObrasController::class, 'getRegistros'])->name('obras.registros');
         Route::post('/{obra}/registros', [ObrasController::class, 'storeRegistro'])->name('obras.registros.store');
-
     });
 
+    //Reportes de Area
+    Route::group(['prefix' => 'reportesArea'], function () {
+        Route::get('/', [ReportesAreaController::class, 'show'])->name('reportesArea');
+    });
 
 });
 

@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Archive, BookOpen, House, Package, Truck } from 'lucide-react';
+import { Archive, BookOpen, House, Package, Truck, Clipboard } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +27,12 @@ const mainNavItems: NavItem[] = [
         permissions: 'role:Administrador|Bodega'
     },
     {
+        title: 'Reportar',
+        href: '/reportesArea',
+        icon: Clipboard,
+        permissions: '',
+    },
+    {
         title: 'Reportes',
         href: '/reportes',
         icon: BookOpen,
@@ -38,6 +44,7 @@ const mainNavItems: NavItem[] = [
         icon: Archive,
         permissions: 'role:Administrador|Diseño',
     },
+    
 ];
 
 /* const footerNavItems: NavItem[] = [
