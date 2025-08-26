@@ -85,6 +85,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Reportes de Area
     Route::group(['prefix' => 'reportesArea'], function () {
         Route::get('/', [ReportesAreaController::class, 'show'])->name('reportesArea');
+        Route::get('/obras', [ReportesAreaController::class, 'getObras'])->name('reportesArea.obras');
+        Route::post('/create', [ReportesAreaController::class, 'store'])->name('reportesArea.store');
     });
 
 });

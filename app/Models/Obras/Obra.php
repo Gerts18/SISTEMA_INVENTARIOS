@@ -2,6 +2,7 @@
 
 namespace App\Models\Obras;
 
+use App\Models\Reportes\Reporte;
 use App\Models\Solicitudes\SolicitudMaterial;
 use Illuminate\Database\Eloquent\Model;
 
@@ -40,5 +41,10 @@ class Obra extends Model
     public function registros()
     {
         return $this->hasMany(RegistroObra::class, 'obra_id', 'obra_id');
+    }
+
+    public function reportes()
+    {
+        return $this->hasMany(Reporte::class, 'obra_id', 'obra_id');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Gestion\GestionInventario;
+use App\Models\Reportes\Reporte;
 use App\Models\Solicitudes\SolicitudMaterial;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -61,5 +62,10 @@ class User extends Authenticatable
     public function usuarioPideMaterial()
     {
         return $this->hasMany(SolicitudMaterial::class, 'usuario_id', 'id');
+    }
+
+    public function reportes()
+    {
+        return $this->hasMany(Reporte::class, 'usuario_id', 'id');
     }
 }

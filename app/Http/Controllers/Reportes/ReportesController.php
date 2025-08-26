@@ -8,6 +8,14 @@ use Inertia\Inertia;
 use App\Models\Gestion\GestionInventario;
 use Carbon\Carbon;
 
+/*
+Este controlador se encarga de renderizar las GESTIONES DE INVENTARIO en forma de reporte.
+Las Gestiones de Inventario son registros de todas las entradas y salidas de productos en el sistema y se hacen desde el módulo de gestión.
+
+Tambien se encarga de renderizar los REPORTES DE AREA.
+
+*/
+
 class ReportesController extends Controller
 {
     public $contador = 1;
