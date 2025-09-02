@@ -28,7 +28,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     //Rutas de inventario
 
-    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega|Checador']], function (){
+    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega|Checador|Contador']], function (){
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
         Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
@@ -71,8 +71,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     });
 
-    //Reportes de inventario
-    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño']], function () {
+    //Obras
+    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño|Contador']], function () {
 
         Route::get('/', [ObrasController::class, 'show'])->name('obras');
         Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');

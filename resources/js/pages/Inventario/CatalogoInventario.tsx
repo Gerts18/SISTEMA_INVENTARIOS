@@ -246,7 +246,7 @@ const CatalogoInventario = () => {
                 </Alert>
             )}
 
-            {(userRole === 'Bodega' || userRole === 'Administrador') && (
+            {(userRole === 'Bodega' || userRole === 'Administrador' || userRole === 'Contador') && (
                 <AddProductModal
                     proveedores={proveedores}
                     selectedCategoryId={selectedCategoryId}
