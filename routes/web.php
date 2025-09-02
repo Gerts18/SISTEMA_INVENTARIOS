@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Autorizaciones\AutorizacionesController;
 use App\Http\Controllers\Files\FilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -87,6 +88,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ReportesAreaController::class, 'show'])->name('reportesArea');
         Route::get('/obras', [ReportesAreaController::class, 'getObras'])->name('reportesArea.obras');
         Route::post('/create', [ReportesAreaController::class, 'store'])->name('reportesArea.store');
+    });
+
+    //Autorizacion de compras
+    Route::group(['prefix' => 'autorizaciones', 'middleware' => ['role:Administrador|Diseño|Bodega']], function () {
+        Route::get('/', [AutorizacionesController::class, 'show'])->name('autorizaciones');
+        Route::post('/create', [AutorizacionesController::class, 'store'])->name('autorizaciones.store');
+        Route::patch('/{autorizacion}/status', [AutorizacionesController::class, 'updateStatus'])->name('autorizaciones.updateStatus');
     });
 
 });
