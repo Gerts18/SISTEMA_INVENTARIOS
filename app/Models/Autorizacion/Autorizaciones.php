@@ -13,16 +13,19 @@ class Autorizaciones extends Model
         'usuario_id',
         'concepto',
         'fecha',
-        'autorizado'
+        'estado'
     ];
 
     protected $casts = [
         'fecha' => 'date',
-        'autorizado' => 'boolean'
     ];
 
     public function usuario()
     {
         return $this->belongsTo(User::class, 'usuario_id');
+    }
+    public function isAuthorized()
+    {
+        return $this->estado === 'autorizado';
     }
 }

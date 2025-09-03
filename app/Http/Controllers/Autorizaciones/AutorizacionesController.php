@@ -12,13 +12,21 @@ class AutorizacionesController extends Controller
 {
     public function show()
     {
-        $autorizaciones = Autorizaciones::with('usuario')
+        // Obtener todas las autorizaciones ordenadas por fecha descendente (más reciente primero)
+        $todasLasAutorizaciones = Autorizaciones::with('usuario')
+            ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $misAutorizaciones = Autorizaciones::with('usuario')
             ->where('usuario_id', Auth::id())
             ->orderBy('fecha', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('Autorizacion/AutorizacionesPage', [
-            'autorizaciones' => $autorizaciones
+            'autorizaciones' => $misAutorizaciones,
+            'todasLasAutorizaciones' => $todasLasAutorizaciones
         ]);
     }
 
@@ -35,7 +43,7 @@ class AutorizacionesController extends Controller
             'usuario_id' => Auth::id(),
             'concepto' => $request->concepto,
             'fecha' => now(),
-            'autorizado' => false
+            'estado' => 'pendiente'
         ]);
 
         return redirect()->route('autorizaciones')->with('message', 'Autorización enviada correctamente.');
@@ -44,13 +52,15 @@ class AutorizacionesController extends Controller
     public function updateStatus(Request $request, Autorizaciones $autorizacion)
     {
         $request->validate([
-            'autorizado' => 'required|boolean'
+            'estado' => 'required|string|in:autorizado,rechazado'
         ]);
 
         $autorizacion->update([
-            'autorizado' => $request->autorizado
+            'estado' => $request->estado
         ]);
 
-        return redirect()->back()->with('message', 'Estado de autorización actualizado.');
+        $message = $request->estado === 'autorizado' ? 'Autorización aprobada correctamente.' : 'Autorización rechazada correctamente.';
+        
+        return redirect()->back()->with('message', $message);
     }
 }

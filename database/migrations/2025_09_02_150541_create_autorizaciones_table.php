@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('usuario_id')->constrained('users')->onDelete('cascade');
             $table->string('concepto', 200);
             $table->date('fecha');
-            $table->boolean('autorizado')->default(false);
+            $table->enum('estado', ['pendiente', 'autorizado', 'rechazado'])->default('pendiente');
             $table->timestamps();
         });
     }
