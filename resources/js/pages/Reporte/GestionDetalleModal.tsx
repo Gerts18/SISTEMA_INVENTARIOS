@@ -122,7 +122,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                     <tr className="border-b">
                                         <th className="text-left py-2">Nombre</th>
                                         <th className="text-left py-2">Código</th>
-                                        <th className="text-right py-2">Cantidad</th>
+                                        <th className="text-center py-2">Cantidad</th>
                                         <th className="text-right py-2">P. Lista</th>
                                         <th className="text-right py-2">P. Público</th>
                                     </tr>
@@ -138,7 +138,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                             <tr key={cambio.cambio_producto_id} className="border-b">
                                                 <td className="py-2">{cambio.producto?.nombre}</td>
                                                 <td className="py-2">{cambio.producto?.codigo}</td>
-                                                <td className="text-right py-2">{cambio.cantidad}</td>
+                                                <td className="text-center py-2">{cambio.cantidad}</td>
                                                 <td className="text-right py-2">
                                                     {typeof precioListaNum === "number" && !isNaN(precioListaNum)
                                                         ? `$${precioListaNum.toFixed(2)}`
