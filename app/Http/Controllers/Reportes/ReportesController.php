@@ -24,8 +24,11 @@ class ReportesController extends Controller
     public function show(Request $request)
     {
         $fecha = $request->get('fecha', Carbon::today()->format('Y-m-d'));
+        $gestionesPage = $request->get('gestiones_page', 1);
+        $reportesPage = $request->get('reportes_page', 1);
+        $perPage = 8; // Items per page
         
-        // Gestiones de inventario
+        // Gestiones de inventario con paginación
         $gestiones = GestionInventario::with([
             'usuario.roles',
             'cambiosProducto.producto'
@@ -33,9 +36,10 @@ class ReportesController extends Controller
         ->whereDate('fecha', $fecha)
         ->orderBy('fecha', 'desc')
         ->orderBy('created_at', 'desc')
-        ->get();
+        ->paginate($perPage, ['*'], 'gestiones_page', $gestionesPage)
+        ->withQueryString();
 
-        // Reportes de área
+        // Reportes de área con paginación
         $reportes = Reporte::with([
             'usuario.roles',
             'obra'
@@ -43,7 +47,8 @@ class ReportesController extends Controller
         ->whereDate('fecha', $fecha)
         ->orderBy('fecha', 'desc')
         ->orderBy('created_at', 'desc')
-        ->get();
+        ->paginate($perPage, ['*'], 'reportes_page', $reportesPage)
+        ->withQueryString();
 
         // Obtener las fechas disponibles de ambas tablas
         $fechasGestiones = GestionInventario::selectRaw('DATE(fecha) as fecha')

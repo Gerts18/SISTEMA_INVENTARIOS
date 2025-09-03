@@ -11,7 +11,7 @@ import {
     SelectTrigger, 
     SelectValue 
 } from "@/components/ui/select"
-import { Calendar, Filter, FileText, Wrench } from "lucide-react"
+import { Calendar, Filter, FileText, Wrench, ChevronLeft, ChevronRight } from "lucide-react"
 
 import GestionDetalleModal from "./GestionDetalleModal"
 import ReporteDetalleModal from "./ReporteDetalleModal"
@@ -41,14 +41,24 @@ interface Reporte {
     };
 }
 
+interface PaginatedData<T> {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+}
+
 type Props = {
-    gestiones: Gestion[]
-    reportes: Reporte[]
+    gestiones: PaginatedData<Gestion>
+    reportes: PaginatedData<Reporte>
     fechaSeleccionada: string
     fechasDisponibles: string[]
 }
 
-const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechasDisponibles = [] }: Props) => {
+const ReportesPage = ({ gestiones, reportes, fechaSeleccionada, fechasDisponibles = [] }: Props) => {
     const [gestionModalOpen, setGestionModalOpen] = useState(false)
     const [reporteModalOpen, setReporteModalOpen] = useState(false)
     const [selectedGestion, setSelectedGestion] = useState<Gestion | null>(null)
@@ -76,6 +86,28 @@ const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechas
 
     const handleDateChange = (fecha: string) => {
         router.get(window.location.pathname, { fecha }, {
+            preserveState: false,
+            preserveScroll: false
+        })
+    }
+
+    const handleGestionesPageChange = (page: number) => {
+        router.get(window.location.pathname, { 
+            fecha: fechaSeleccionada,
+            gestiones_page: page,
+            reportes_page: reportes.current_page
+        }, {
+            preserveState: true,
+            preserveScroll: true
+        })
+    }
+
+    const handleReportesPageChange = (page: number) => {
+        router.get(window.location.pathname, { 
+            fecha: fechaSeleccionada,
+            gestiones_page: gestiones.current_page,
+            reportes_page: page
+        }, {
             preserveState: true,
             preserveScroll: true
         })
@@ -107,6 +139,79 @@ const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechas
             hour: '2-digit', 
             minute: '2-digit' 
         })
+    }
+
+    const PaginationComponent = ({ 
+        currentPage, 
+        lastPage, 
+        onPageChange, 
+        from, 
+        to, 
+        total 
+    }: { 
+        currentPage: number
+        lastPage: number
+        onPageChange: (page: number) => void
+        from: number
+        to: number
+        total: number
+    }) => {
+        if (lastPage <= 1) return null
+
+        return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-4 border-t">
+                <div className="text-xs sm:text-sm text-gray-600">
+                    Mostrando {from} a {to} de {total} resultados
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                        className="h-8 w-8 p-0"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, lastPage) }, (_, i) => {
+                            let page = i + 1
+                            if (lastPage > 5) {
+                                if (currentPage > 3) {
+                                    page = currentPage - 2 + i
+                                }
+                                if (currentPage > lastPage - 2) {
+                                    page = lastPage - 4 + i
+                                }
+                            }
+                            
+                            return (
+                                <Button
+                                    key={page}
+                                    variant={currentPage === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => onPageChange(page)}
+                                    className="h-8 w-8 p-0 text-xs"
+                                >
+                                    {page}
+                                </Button>
+                            )
+                        })}
+                    </div>
+                    
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage >= lastPage}
+                        className="h-8 w-8 p-0"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </Button>
+                </div>
+            </div>
+        )
     }
 
     return (
@@ -143,7 +248,7 @@ const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechas
                                 <span className="text-xs sm:text-sm text-center">
                                     <span className="hidden sm:inline">Gestiones de Inventario </span>
                                     <span className="sm:hidden">Gestiones </span>
-                                    ({gestiones.length})
+                                    ({gestiones.total})
                                 </span>
                             </TabsTrigger>
                             <TabsTrigger value="reportes" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2 px-2 sm:px-3">
@@ -151,45 +256,56 @@ const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechas
                                 <span className="text-xs sm:text-sm text-center">
                                     <span className="hidden sm:inline">Reportes de Área </span>
                                     <span className="sm:hidden">Reportes </span>
-                                    ({reportes.length})
+                                    ({reportes.total})
                                 </span>
                             </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="gestiones" className="mt-4 sm:mt-6">
                             <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
-                                {gestiones.length > 0 ? (
-                                    <span>Se encontraron {gestiones.length} gestiones para {formatDateForDisplay(fechaSeleccionada)}</span>
+                                {gestiones.total > 0 ? (
+                                    <span>Se encontraron {gestiones.total} gestiones para {formatDateForDisplay(fechaSeleccionada)}</span>
                                 ) : (
                                     <span>No hay gestiones registradas para {formatDateForDisplay(fechaSeleccionada)}</span>
                                 )}
                             </div>
 
-                            {gestiones.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                                    {gestiones.map((gestion) => (
-                                        <div key={gestion.gestion_inv_id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 flex flex-col gap-2">
-                                            <div className="font-bold text-sm sm:text-base truncate">{gestion.usuario?.name}</div>
-                                            <div className="text-xs sm:text-sm text-gray-500 truncate">
-                                                Rol: {gestion.usuario?.roles?.map(r => r.name).join(', ')}
+                            {gestiones.data.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                                        {gestiones.data.map((gestion) => (
+                                            <div key={gestion.gestion_inv_id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 flex flex-col gap-2">
+                                                <div className="font-bold text-sm sm:text-base truncate">{gestion.usuario?.name}</div>
+                                                <div className="text-xs sm:text-sm text-gray-500 truncate">
+                                                    Rol: {gestion.usuario?.roles?.map(r => r.name).join(', ')}
+                                                </div>
+                                                <div className="text-xs sm:text-sm">
+                                                    Tipo: <span className={gestion.tipo_gestion === "Entrada" ? "text-green-600" : "text-red-600"}>{gestion.tipo_gestion}</span>
+                                                </div>
+                                                <div className="text-xs text-gray-400">
+                                                    {formatTime(gestion.created_at)}
+                                                </div>
+                                                <Button
+                                                    className="mt-2 text-xs sm:text-sm py-1 sm:py-2"
+                                                    onClick={() => openGestionModal(gestion)}
+                                                    variant="default"
+                                                    size="sm"
+                                                >
+                                                    Ver más
+                                                </Button>
                                             </div>
-                                            <div className="text-xs sm:text-sm">
-                                                Tipo: <span className={gestion.tipo_gestion === "Entrada" ? "text-green-600" : "text-red-600"}>{gestion.tipo_gestion}</span>
-                                            </div>
-                                            <div className="text-xs text-gray-400">
-                                                {formatTime(gestion.created_at)}
-                                            </div>
-                                            <Button
-                                                className="mt-2 text-xs sm:text-sm py-1 sm:py-2"
-                                                onClick={() => openGestionModal(gestion)}
-                                                variant="default"
-                                                size="sm"
-                                            >
-                                                Ver más
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                    
+                                    <PaginationComponent
+                                        currentPage={gestiones.current_page}
+                                        lastPage={gestiones.last_page}
+                                        onPageChange={handleGestionesPageChange}
+                                        from={gestiones.from}
+                                        to={gestiones.to}
+                                        total={gestiones.total}
+                                    />
+                                </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4">
                                     <Filter className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
@@ -205,41 +321,52 @@ const ReportesPage = ({ gestiones = [], reportes = [], fechaSeleccionada, fechas
 
                         <TabsContent value="reportes" className="mt-4 sm:mt-6">
                             <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
-                                {reportes.length > 0 ? (
-                                    <span>Se encontraron {reportes.length} reportes para {formatDateForDisplay(fechaSeleccionada)}</span>
+                                {reportes.total > 0 ? (
+                                    <span>Se encontraron {reportes.total} reportes para {formatDateForDisplay(fechaSeleccionada)}</span>
                                 ) : (
                                     <span>No hay reportes registrados para {formatDateForDisplay(fechaSeleccionada)}</span>
                                 )}
                             </div>
 
-                            {reportes.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                                    {reportes.map((reporte) => (
-                                        <div key={reporte.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 flex flex-col gap-2">
-                                            <div className="font-bold text-sm sm:text-base truncate">{reporte.usuario?.name}</div>
-                                            <div className="text-xs sm:text-sm text-gray-500 truncate">
-                                                Rol: {reporte.usuario?.roles?.map(r => r.name).join(', ')}
+                            {reportes.data.length > 0 ? (
+                                <>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                                        {reportes.data.map((reporte) => (
+                                            <div key={reporte.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 flex flex-col gap-2">
+                                                <div className="font-bold text-sm sm:text-base truncate">{reporte.usuario?.name}</div>
+                                                <div className="text-xs sm:text-sm text-gray-500 truncate">
+                                                    Rol: {reporte.usuario?.roles?.map(r => r.name).join(', ')}
+                                                </div>
+                                                <div className="text-xs sm:text-sm text-blue-600 truncate">
+                                                    Obra: {reporte.obra?.nombre}
+                                                </div>
+                                                <div className="text-xs sm:text-sm text-gray-600">
+                                                    Estado: {reporte.obra?.estado}
+                                                </div>
+                                                <div className="text-xs text-gray-400">
+                                                    {formatTime(reporte.created_at)}
+                                                </div>
+                                                <Button
+                                                    className="mt-2 text-xs sm:text-sm py-1 sm:py-2"
+                                                    onClick={() => openReporteModal(reporte)}
+                                                    variant="default"
+                                                    size="sm"
+                                                >
+                                                    Ver más
+                                                </Button>
                                             </div>
-                                            <div className="text-xs sm:text-sm text-blue-600 truncate">
-                                                Obra: {reporte.obra?.nombre}
-                                            </div>
-                                            <div className="text-xs sm:text-sm text-gray-600">
-                                                Estado: {reporte.obra?.estado}
-                                            </div>
-                                            <div className="text-xs text-gray-400">
-                                                {formatTime(reporte.created_at)}
-                                            </div>
-                                            <Button
-                                                className="mt-2 text-xs sm:text-sm py-1 sm:py-2"
-                                                onClick={() => openReporteModal(reporte)}
-                                                variant="default"
-                                                size="sm"
-                                            >
-                                                Ver más
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
+                                        ))}
+                                    </div>
+                                    
+                                    <PaginationComponent
+                                        currentPage={reportes.current_page}
+                                        lastPage={reportes.last_page}
+                                        onPageChange={handleReportesPageChange}
+                                        from={reportes.from}
+                                        to={reportes.to}
+                                        total={reportes.total}
+                                    />
+                                </>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4">
                                     <Filter className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
