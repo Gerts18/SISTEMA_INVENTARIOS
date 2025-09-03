@@ -19,7 +19,7 @@ class SolicitarMaterialController extends Controller
     {
         $obras = Obra::select('obra_id', 'nombre')
                     ->where('estado', 'en_progreso')
-                    ->orderBy('nombre')
+                    ->orderBy('created_at', 'desc')
                     ->get();
         
         return response()->json($obras);
