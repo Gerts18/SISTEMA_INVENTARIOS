@@ -14,12 +14,33 @@ use Inertia\Inertia;
 
 class ObrasController extends Controller
 {
-    public function show()
+    public function show(Request $request)
     {
-        $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
+        $perPage = $request->get('per_page', 9); // 9 items por página para grid de 3 columnas
+        $page = $request->get('page', 1);
+        $search = $request->get('search', '');
+        $status = $request->get('status', 'en_progreso');
+        
+        $query = Obra::with('archivos');
+        
+        // Aplicar filtros
+        if ($status && $status !== 'todas') {
+            $query->where('estado', $status);
+        }
+        
+        if ($search) {
+            $query->where('nombre', 'like', '%' . $search . '%');
+        }
+        
+        $obras = $query->orderBy('created_at', 'desc')->paginate($perPage);
         
         return Inertia::render('Obra/ObrasPage', [
-            'obras' => $obras
+            'obras' => $obras,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'per_page' => $perPage
+            ]
         ]);
     }
 
@@ -115,22 +136,20 @@ class ObrasController extends Controller
             // Solo actualizar el estado, sin modificar fechas
             $obra->update(['estado' => $request->estado]);
             
-            // Obtener todas las obras actualizadas para devolver a la vista
-            $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
+            // Mantener los filtros actuales al recargar
+            $currentFilters = [
+                'search' => $request->get('search', ''),
+                'status' => $request->get('status', 'en_progreso'),
+                'per_page' => $request->get('per_page', 9),
+                'page' => $request->get('page', 1)
+            ];
             
-            return Inertia::render('Obra/ObrasPage', [
-                'obras' => $obras
-            ])->with('success', 'Estado actualizado correctamente.');
+            return redirect()->route('obras', $currentFilters)->with('success', 'Estado actualizado correctamente.');
 
         } catch (\Exception $e) {
             Log::error('Error updating obra status: ' . $e->getMessage());
             
-            // En caso de error, devolver a la vista con el error
-            $obras = Obra::with('archivos')->orderBy('created_at', 'desc')->get();
-            
-            return Inertia::render('Obra/ObrasPage', [
-                'obras' => $obras
-            ])->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al actualizar el estado: ' . $e->getMessage());
         }
     }
 

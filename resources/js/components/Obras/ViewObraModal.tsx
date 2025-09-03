@@ -303,8 +303,10 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl font-bold">{currentObra.nombre}</DialogTitle>
+                    <DialogHeader className="pr-8">
+                        <DialogTitle className="text-xl font-bold break-words hyphens-auto leading-tight max-w-full overflow-wrap-anywhere">
+                            {currentObra.nombre}
+                        </DialogTitle>
                         <DialogDescription>
                             Detalles completos de la obra
                         </DialogDescription>
@@ -502,7 +504,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         {currentObra.archivos && currentObra.archivos.length > 0 && (
                             <div>
                                 <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                    <FileIcon className="h-4 w-4" />
+                                    <FileIcon className="h-4 w-4 flex-shrink-0" />
                                     Archivos ({currentObra.archivos.length})
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -536,9 +538,11 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
 
                                             {/* Información del archivo */}
                                             <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    {getFileIcon(archivo.nombre_archivo)}
-                                                    <span className="text-sm font-medium truncate">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <div className="flex-shrink-0">
+                                                        {getFileIcon(archivo.nombre_archivo)}
+                                                    </div>
+                                                    <span className="text-sm font-medium truncate min-w-0 flex-1" title={archivo.nombre_archivo}>
                                                         {archivo.nombre_archivo}
                                                     </span>
                                                 </div>
@@ -551,8 +555,8 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                                         onClick={() => handlePreviewFile(archivo)}
                                                         className="flex items-center gap-1 flex-1"
                                                     >
-                                                        <EyeIcon className="h-3 w-3" />
-                                                        Vista
+                                                        <EyeIcon className="h-3 w-3 flex-shrink-0" />
+                                                        <span className="truncate">Vista</span>
                                                     </Button>
                                                 </div>
                                             </div>
@@ -565,7 +569,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                         {/* Solicitudes de Material */}
                         <div>
                             <h3 className="font-semibold mb-3 flex items-center gap-2">
-                                <ClipboardListIcon className="h-4 w-4" />
+                                <ClipboardListIcon className="h-4 w-4 flex-shrink-0" />
                                 Solicitudes de Material
                             </h3>
                             
@@ -578,24 +582,24 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                     {solicitudes.map((solicitud) => (
                                         <Card key={solicitud.solicitud_id} className="hover:shadow-md transition-shadow">
                                             <CardHeader className="pb-2">
-                                                <div className="flex justify-between items-start">
-                                                    <CardTitle className="text-base">
-                                                        Solicitud #{solicitud.solicitud_id}
+                                                <div className="flex justify-between items-start gap-3">
+                                                    <CardTitle className="text-base flex-1 min-w-0">
+                                                        <span className="truncate block">Solicitud #{solicitud.solicitud_id}</span>
                                                     </CardTitle>
-                                                    <Badge variant={solicitud.reporte_generado_url ? "default" : "secondary"} className="text-xs">
+                                                    <Badge variant={solicitud.reporte_generado_url ? "default" : "secondary"} className="text-xs flex-shrink-0 whitespace-nowrap">
                                                         {solicitud.reporte_generado_url ? "Con PDF" : "Sin PDF"}
                                                     </Badge>
                                                 </div>
                                             </CardHeader>
                                             <CardContent className="space-y-2">
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <CalendarIcon className="h-3 w-3" />
-                                                    <span>{new Date(solicitud.fecha_solicitud).toLocaleDateString('es-ES')}</span>
+                                                    <CalendarIcon className="h-3 w-3 flex-shrink-0" />
+                                                    <span className="whitespace-nowrap">{new Date(solicitud.fecha_solicitud).toLocaleDateString('es-ES')}</span>
                                                 </div>
                                                 
-                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                    <UserIcon className="h-3 w-3" />
-                                                    <span className="truncate">{solicitud.usuario_name}</span>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                                                    <UserIcon className="h-3 w-3 flex-shrink-0" />
+                                                    <span className="truncate flex-1" title={solicitud.usuario_name}>{solicitud.usuario_name}</span>
                                                 </div>
                                                 
                                                 <div className="pt-2">
@@ -605,8 +609,8 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                                         className="w-full"
                                                         onClick={() => handleViewSolicitud(solicitud)}
                                                     >
-                                                        <EyeIcon className="h-3 w-3 mr-2" />
-                                                        Ver más
+                                                        <EyeIcon className="h-3 w-3 mr-2 flex-shrink-0" />
+                                                        <span className="truncate">Ver más</span>
                                                     </Button>
                                                 </div>
                                             </CardContent>
@@ -627,10 +631,14 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
             {/* Modal de Vista Previa */}
             <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            {previewFile && getFileIcon(previewFile.nombre_archivo)}
-                            {previewFile?.nombre_archivo}
+                    <DialogHeader className="pr-8">
+                        <DialogTitle className="flex items-start gap-2 break-words hyphens-auto leading-tight">
+                            <div className="flex-shrink-0 mt-1">
+                                {previewFile && getFileIcon(previewFile.nombre_archivo)}
+                            </div>
+                            <span className="break-words min-w-0 flex-1 overflow-wrap-anywhere" title={previewFile?.nombre_archivo}>
+                                {previewFile?.nombre_archivo}
+                            </span>
                         </DialogTitle>
                         <DialogDescription>
                             Vista previa del archivo
@@ -702,4 +710,3 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         </>
     );
 }
-   
