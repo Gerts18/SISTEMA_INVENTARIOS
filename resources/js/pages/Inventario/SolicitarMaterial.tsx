@@ -269,8 +269,8 @@ const SolicitarMaterial = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-4 md:p-8">
         {/* Alert Component */}
         {alertType && (
           <Alert className={`mb-6 ${
@@ -298,7 +298,7 @@ const SolicitarMaterial = () => {
           </div>
 
           {/* Obra and Concepto Row */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Obra
@@ -338,7 +338,7 @@ const SolicitarMaterial = () => {
           </div>
 
           {/* Material Categories Grid */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Herraje */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-medium text-gray-700 mb-3 text-center">Herraje</h3>
@@ -346,7 +346,7 @@ const SolicitarMaterial = () => {
                 value={herraje}
                 onChange={(e) => setHerraje(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -357,7 +357,7 @@ const SolicitarMaterial = () => {
                 value={barniz}
                 onChange={(e) => setBarniz(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -368,7 +368,7 @@ const SolicitarMaterial = () => {
                 value={madera}
                 onChange={(e) => setMadera(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -379,7 +379,7 @@ const SolicitarMaterial = () => {
                 value={equipos}
                 onChange={(e) => setEquipos(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
           </div>
@@ -389,7 +389,7 @@ const SolicitarMaterial = () => {
             <button
               type="submit"
               disabled={loading || !selectedObra || !concepto.trim()}
-              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
+              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200 w-full md:w-auto"
             >
               {loading ? 'Cargando...' : 'Enviar a bodega'}
             </button>
