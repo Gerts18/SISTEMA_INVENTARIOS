@@ -65,10 +65,10 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
     <AppLayout>
       <Head title='Autorizaciones'/>
       
-      <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
-        <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min p-6">
+      <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-hidden">
+        <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-x-hidden rounded-xl border md:min-h-min p-6">
           
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-full">
             <div>
               <h1 className="text-2xl font-bold">Autorizaciones</h1>
               <p className="text-muted-foreground">
@@ -81,10 +81,10 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
 
             {/* Toggle para Administrador - solo mostrar si es Administrador */}
             {userRole === 'Administrador' && (
-              <div className="flex gap-2 p-3 border rounded-lg bg-muted/40">
+              <div className="flex flex-wrap gap-2 p-3 border rounded-lg bg-muted/40">
                 <button
                   onClick={() => setAdminView("mis-solicitudes")}
-                  className={`px-3 py-1.5 text-sm rounded-md border transition ${
+                  className={`px-3 py-1.5 text-sm rounded-md border transition flex-shrink-0 ${
                     adminView === "mis-solicitudes"
                       ? "bg-primary text-white border-primary"
                       : "bg-background hover:bg-accent"
@@ -94,7 +94,7 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
                 </button>
                 <button
                   onClick={() => setAdminView("todas-solicitudes")}
-                  className={`px-3 py-1.5 text-sm rounded-md border transition ${
+                  className={`px-3 py-1.5 text-sm rounded-md border transition flex-shrink-0 ${
                     adminView === "todas-solicitudes"
                       ? "bg-primary text-white border-primary"
                       : "bg-background hover:bg-accent"
@@ -157,26 +157,29 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
                       </Card>
                     ) : (
                       todasLasAutorizaciones?.map((autorizacion) => (
-                        <Card key={autorizacion.id}>
+                        <Card key={autorizacion.id} className="w-full">
                           <CardContent className="pt-4">
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium mb-1">{autorizacion.concepto}</p>
-                                <p className="text-xs text-muted-foreground">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                              <div className="flex-1 min-w-0 w-full sm:w-96">
+                                <p className="text-sm font-medium mb-1 break-words word-wrap hyphens-auto leading-relaxed">{autorizacion.concepto}</p>
+                                <p className="text-xs text-muted-foreground break-words">
                                   Por: {autorizacion.usuario.name} • {new Date(autorizacion.fecha).toLocaleDateString()}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant={autorizacion.estado === 'autorizado' ? 'default' : autorizacion.estado === 'rechazado' ? 'destructive' : 'secondary'}>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
+                                <Badge 
+                                  variant={autorizacion.estado === 'autorizado' ? 'default' : autorizacion.estado === 'rechazado' ? 'destructive' : 'secondary'}
+                                  className="whitespace-nowrap"
+                                >
                                   {autorizacion.estado === 'autorizado' ? 'Autorizado' : 
                                    autorizacion.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
                                 </Badge>
                                 {autorizacion.estado === 'pendiente' && (
-                                  <div className="flex gap-1">
+                                  <div className="flex gap-1 flex-wrap">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="h-7 px-2 text-xs bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                                      className="h-7 px-2 text-xs bg-green-50 hover:bg-green-100 border-green-200 text-green-700 whitespace-nowrap"
                                       onClick={() => handleApprove(autorizacion.id, 'autorizado')}
                                     >
                                       Aprobar
@@ -184,7 +187,7 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="h-7 px-2 text-xs bg-red-50 hover:bg-red-100 border-red-200 text-red-700"
+                                      className="h-7 px-2 text-xs bg-red-50 hover:bg-red-100 border-red-200 text-red-700 whitespace-nowrap"
                                       onClick={() => handleApprove(autorizacion.id, 'rechazado')}
                                     >
                                       Rechazar
@@ -212,19 +215,24 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
                       </Card>
                     ) : (
                       autorizaciones.map((autorizacion) => (
-                        <Card key={autorizacion.id}>
+                        <Card key={autorizacion.id} className="w-full">
                           <CardContent className="pt-4">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <p className="text-sm font-medium mb-1">{autorizacion.concepto}</p>
-                                <p className="text-xs text-muted-foreground">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                              <div className="flex-1 min-w-0 w-full sm:w-96">
+                                <p className="text-sm font-medium mb-1 break-words word-wrap hyphens-autoleading-relaxed">{autorizacion.concepto}</p>
+                                <p className="text-xs text-muted-foreground break-words">
                                   Enviado el: {new Date(autorizacion.fecha).toLocaleDateString()}
                                 </p>
                               </div>
-                              <Badge variant={autorizacion.estado === 'autorizado' ? 'default' : autorizacion.estado === 'rechazado' ? 'destructive' : 'secondary'}>
-                                {autorizacion.estado === 'autorizado' ? 'Autorizado' : 
-                                 autorizacion.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
-                              </Badge>
+                              <div className="flex-shrink-0">
+                                <Badge 
+                                  variant={autorizacion.estado === 'autorizado' ? 'default' : autorizacion.estado === 'rechazado' ? 'destructive' : 'secondary'}
+                                  className="whitespace-nowrap"
+                                >
+                                  {autorizacion.estado === 'autorizado' ? 'Autorizado' : 
+                                   autorizacion.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}
+                                </Badge>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
