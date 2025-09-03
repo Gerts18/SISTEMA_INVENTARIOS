@@ -36,7 +36,6 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccessState] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -47,11 +46,8 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
             const response = await axios.patch(`/inventario/productos/${producto.producto_id}`, formData);
 
             if (response.data.success) {
-                setSuccessState(true);
-                setTimeout(() => {
-                    setSuccessState(false);
-                    onSuccess?.();
-                }, 2000);
+                // Cerrar inmediatamente y dejar que el componente padre maneje el éxito
+                onSuccess?.();
             }
         } catch (error: any) {
             setError(error.response?.data?.message || 'Error al actualizar el producto');
@@ -73,13 +69,6 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
                 <Alert variant="destructive">
                     <AlertTitle>Error</AlertTitle>
                     <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            )}
-
-            {success && (
-                <Alert variant="default" className="border-green-400 bg-green-100 text-green-700">
-                    <AlertTitle>Éxito</AlertTitle>
-                    <AlertDescription>Producto actualizado correctamente</AlertDescription>
                 </Alert>
             )}
 
@@ -115,11 +104,13 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
                         <Input
                             id="stock"
                             type="number"
-                            min="0"
                             value={formData.stock}
-                            onChange={(e) => handleInputChange('stock', parseInt(e.target.value) || 0)}
-                            required
+                            disabled
+                            className="bg-muted"
                         />
+                        <span className="text-xs text-muted-foreground">
+                            El stock no se puede modificar
+                        </span>
                     </div>
 
                     <div>

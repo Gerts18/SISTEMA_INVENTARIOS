@@ -40,6 +40,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
         
+        // Ruta para actualización masiva de precios
+        Route::post('/actualizar-precios-masivo', [InventariosController::class, 'aumentoMasivo'])->name('inventario.actualizar-precios-masivo');
+        
         // Solicitar Material routes
         Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
