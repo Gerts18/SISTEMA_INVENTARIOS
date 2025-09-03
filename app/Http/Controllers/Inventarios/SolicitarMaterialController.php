@@ -68,32 +68,45 @@ class SolicitarMaterialController extends Controller
         ]);
     }
 
-    public function getSolicitudes()
+    public function getSolicitudes(Request $request)
     {
+        $perPage = $request->get('per_page', 9); // Default 9 items per page to fit grid layout
+        $page = $request->get('page', 1);
+
         $solicitudes = SolicitudMaterial::with(['obra:obra_id,nombre', 'usuarioPideMaterial:id,name'])
             ->select('solicitud_id', 'usuario_id', 'obra_id', 'fecha_solicitud', 'concepto', 'reporte_generado_url', 'created_at')
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($solicitud) {
-                return [
-                    'solicitud_id' => $solicitud->solicitud_id,
-                    'fecha_solicitud' => $solicitud->fecha_solicitud,
-                    'concepto' => $solicitud->concepto,
-                    'reporte_generado_url' => $solicitud->reporte_generado_url,
-                    'created_at' => $solicitud->created_at,
-                    'obra' => [
-                        'obra_id' => $solicitud->obra->obra_id,
-                        'nombre' => $solicitud->obra->nombre,
-                    ],
-                    'usuario' => [
-                        'id' => $solicitud->usuarioPideMaterial->id,
-                        'name' => $solicitud->usuarioPideMaterial->name,
-                        'roles' => $solicitud->usuarioPideMaterial->getRoleNames(),
-                    ],
-                ];
-            });
+            ->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json($solicitudes);
+        $mappedData = $solicitudes->getCollection()->map(function ($solicitud) {
+            return [
+                'solicitud_id' => $solicitud->solicitud_id,
+                'fecha_solicitud' => $solicitud->fecha_solicitud,
+                'concepto' => $solicitud->concepto,
+                'reporte_generado_url' => $solicitud->reporte_generado_url,
+                'created_at' => $solicitud->created_at,
+                'obra' => [
+                    'obra_id' => $solicitud->obra->obra_id,
+                    'nombre' => $solicitud->obra->nombre,
+                ],
+                'usuario' => [
+                    'id' => $solicitud->usuarioPideMaterial->id,
+                    'name' => $solicitud->usuarioPideMaterial->name,
+                    'roles' => $solicitud->usuarioPideMaterial->getRoleNames(),
+                ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $mappedData,
+            'current_page' => $solicitudes->currentPage(),
+            'last_page' => $solicitudes->lastPage(),
+            'per_page' => $solicitudes->perPage(),
+            'total' => $solicitudes->total(),
+            'from' => $solicitudes->firstItem(),
+            'to' => $solicitudes->lastItem(),
+            'has_more_pages' => $solicitudes->hasMorePages(),
+        ]);
     }
 
     public function indexSolicitudes()

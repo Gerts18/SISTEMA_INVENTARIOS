@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, User, Building, FileText, Download, Eye, Loader2 } from 'lucide-react'
+import { Calendar, User, Building, FileText, Download, Eye, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import axios from 'axios'
 
 interface Solicitud {
@@ -23,27 +23,55 @@ interface Solicitud {
   }
 }
 
+interface PaginationData {
+  data: Solicitud[]
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  from: number
+  to: number
+  has_more_pages: boolean
+}
+
 const SolicitudesDeMaterial = () => {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [paginationInfo, setPaginationInfo] = useState<Omit<PaginationData, 'data'> | null>(null)
+  const [perPage] = useState(9) // 9 items per page for grid layout
 
   useEffect(() => {
-    fetchSolicitudes()
-  }, [])
+    fetchSolicitudes(currentPage)
+  }, [currentPage])
 
-  const fetchSolicitudes = async () => {
+  const fetchSolicitudes = async (page: number) => {
     try {
       setLoading(true)
-      const response = await axios.get('/inventario/solicitudes-material/data')
-      setSolicitudes(response.data)
+      const response = await axios.get(`/inventario/solicitudes-material/data?page=${page}&per_page=${perPage}`)
+      const paginatedData: PaginationData = response.data
+      setSolicitudes(paginatedData.data)
+      setPaginationInfo({
+        current_page: paginatedData.current_page,
+        last_page: paginatedData.last_page,
+        per_page: paginatedData.per_page,
+        total: paginatedData.total,
+        from: paginatedData.from,
+        to: paginatedData.to,
+        has_more_pages: paginatedData.has_more_pages,
+      })
     } catch (error) {
       console.error('Error fetching solicitudes:', error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage)
   }
 
   const handleVerMas = (solicitud: Solicitud) => {
@@ -107,6 +135,11 @@ const SolicitudesDeMaterial = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Solicitudes de Material</h1>
+          {paginationInfo && (
+            <p className="text-gray-600">
+              Mostrando {paginationInfo.from || 0} - {paginationInfo.to || 0} de {paginationInfo.total} solicitudes
+            </p>
+          )}
         </div>
 
         {solicitudes.length === 0 ? (
@@ -118,56 +151,140 @@ const SolicitudesDeMaterial = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {solicitudes.map((solicitud) => (
-              <Card key={solicitud.solicitud_id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">#{solicitud.solicitud_id}</CardTitle>
-                    <Badge variant={solicitud.reporte_generado_url ? "default" : "secondary"}>
-                      {solicitud.reporte_generado_url ? "Con PDF" : "Sin PDF"}
-                    </Badge>
-                  </div>
-                  <CardDescription className="text-sm text-gray-600">
-                    {formatDateTime(solicitud.created_at)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">{formatDate(solicitud.fecha_solicitud)}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Building className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium truncate">{solicitud.obra.nombre}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm truncate">{solicitud.usuario.name}</span>
-                  </div>
-                  
-                  <div className="mt-3">
-                    <p className="text-sm text-gray-700 line-clamp-2">
-                      <strong>Concepto:</strong> {solicitud.concepto}
-                    </p>
-                  </div>
-                  
-                  <div className="pt-3 border-t">
-                    <Button 
-                      onClick={() => handleVerMas(solicitud)}
-                      className="w-full"
-                      variant="outline"
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {solicitudes.map((solicitud) => (
+                <Card key={solicitud.solicitud_id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <CardTitle className="text-lg">#{solicitud.solicitud_id}</CardTitle>
+                      <Badge variant={solicitud.reporte_generado_url ? "default" : "secondary"}>
+                        {solicitud.reporte_generado_url ? "Con PDF" : "Sin PDF"}
+                      </Badge>
+                    </div>
+                    <CardDescription className="text-sm text-gray-600">
+                      {formatDateTime(solicitud.created_at)}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">{formatDate(solicitud.fecha_solicitud)}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Building className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm font-medium truncate">{solicitud.obra.nombre}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm truncate">{solicitud.usuario.name}</span>
+                    </div>
+                    
+                    <div className="mt-3">
+                      <p className="text-sm text-gray-700 line-clamp-2">
+                        <strong>Concepto:</strong> {solicitud.concepto}
+                      </p>
+                    </div>
+                    
+                    <div className="pt-3 border-t">
+                      <Button 
+                        onClick={() => handleVerMas(solicitud)}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver más
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {paginationInfo && paginationInfo.last_page > 1 && (
+              <div className="mt-8 flex items-center justify-center space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  size="sm"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+
+                <div className="flex items-center space-x-2">
+                  {/* Previous page */}
+                  {currentPage > 2 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePageChange(1)}
+                      >
+                        1
+                      </Button>
+                      {currentPage > 3 && <span className="text-gray-400">...</span>}
+                    </>
+                  )}
+
+                  {/* Previous page number */}
+                  {currentPage > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage - 1)}
                     >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Ver más
+                      {currentPage - 1}
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  )}
+
+                  {/* Current page */}
+                  <Button variant="default" size="sm" disabled>
+                    {currentPage}
+                  </Button>
+
+                  {/* Next page number */}
+                  {currentPage < paginationInfo.last_page && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                    >
+                      {currentPage + 1}
+                    </Button>
+                  )}
+
+                  {/* Next pages */}
+                  {currentPage < paginationInfo.last_page - 1 && (
+                    <>
+                      {currentPage < paginationInfo.last_page - 2 && <span className="text-gray-400">...</span>}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePageChange(paginationInfo.last_page)}
+                      >
+                        {paginationInfo.last_page}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === paginationInfo.last_page}
+                  size="sm"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Modal */}
