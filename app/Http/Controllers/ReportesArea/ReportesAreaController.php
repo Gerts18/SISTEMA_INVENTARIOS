@@ -22,7 +22,9 @@ class ReportesAreaController extends Controller
 
     public function getObras()
     {
-        $obras = Obra::select('obra_id', 'nombre', 'estado')->get();
+        $obras = Obra::select('obra_id', 'nombre', 'estado')
+            ->orderBy('obra_id', 'desc')
+            ->get();
         return response()->json($obras);
     }
 
