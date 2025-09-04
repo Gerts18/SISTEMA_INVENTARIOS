@@ -11,6 +11,7 @@ use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
+use App\Http\Controllers\Productos\ProductosController;
 use App\Http\Controllers\ReportesArea\ReportesAreaController;
 
 Route::get('/', function () {
@@ -40,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
         
+        // Ruta para actualización masiva de precios
+        Route::post('/actualizar-precios-masivo', [InventariosController::class, 'aumentoMasivo'])->name('inventario.actualizar-precios-masivo');
+        
         // Solicitar Material routes
         Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
@@ -49,6 +53,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Solicitudes de Material routes
         Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
         Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
+
+        // Rutas para productos
+        Route::post('/productos', [ProductosController::class, 'store'])->name('productos.store');
+        Route::patch('/productos/{id}', [ProductosController::class, 'update'])->name('productos.update');
+        Route::get('/productos/{id}/historial-precios', [ProductosController::class, 'obtenerHistorialPrecios'])->name('productos.historial-precios');
 
     });
 

@@ -2,16 +2,17 @@
 
 import { AddProductModal } from '@/components/inventory/AddProductModal';
 import { ProductTable } from '@/components/inventory/ProductTable';
+import { EditProductForm } from '@/components/inventory/EditProductForm';
+import { PriceHistory } from '@/components/inventory/PriceHistory';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { router } from '@inertiajs/react';
-import { DialogDescription } from '@radix-ui/react-dialog';
 import axios from 'axios';
-import { CirclePlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CirclePlus, ChevronLeft, ChevronRight, TrendingUp, AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { PageProps } from '@/types/auth'
 import { Head, usePage } from '@inertiajs/react';
@@ -69,6 +70,72 @@ const CatalogoInventario = () => {
         categoria_id: '',
     });
 
+    // Estados para el modal inteligente
+    const [modalState, setModalState] = useState<{
+        isOpen: boolean;
+        type: 'edit' | 'history' | null;
+        producto: Producto | null;
+    }>({
+        isOpen: false,
+        type: null,
+        producto: null
+    });
+
+    // Estados para actualización masiva de precios
+    const [massUpdateModal, setMassUpdateModal] = useState(false);
+    const [massUpdateData, setMassUpdateData] = useState({
+        proveedor_id: '',
+        porcentaje: '',
+    });
+    const [confirmationModal, setConfirmationModal] = useState(false);
+    const [massUpdateLoading, setMassUpdateLoading] = useState(false);
+    const [massUpdateError, setMassUpdateError] = useState<string | null>(null);
+    const [selectedProviderForUpdate, setSelectedProviderForUpdate] = useState<Proveedor | null>(null);
+
+    // Funciones para manejar las acciones del menú contextual
+    const handleEditProduct = (producto: Producto) => {
+        // Pequeño delay para evitar conflictos de focus
+        setTimeout(() => {
+            setModalState({
+                isOpen: true,
+                type: 'edit',
+                producto
+            });
+        }, 100);
+    };
+
+    const handleViewHistory = (producto: Producto) => {
+        // Pequeño delay para evitar conflictos de focus
+        setTimeout(() => {
+            setModalState({
+                isOpen: true,
+                type: 'history',
+                producto
+            });
+        }, 100);
+    };
+
+    const handleModalClose = () => {
+        setModalState({
+            isOpen: false,
+            type: null,
+            producto: null
+        });
+    };
+
+    const handleProductUpdateSuccess = () => {
+        // Refrescar la lista de productos después de actualizar
+        if (selectedCategoryId) {
+            fetchProductsByCategory(selectedCategoryId);
+        } else if (selectedProviderId) {
+            fetchProductsByProvider(selectedProviderId);
+        }
+
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        handleModalClose();
+    };
+
     const fetchProveedores = () => {
         axios
             .get('/inventario/proveedores')
@@ -123,10 +190,6 @@ const CatalogoInventario = () => {
             });
         });
     };
-
-    useEffect(() => {
-        console.log('selectedCategoryId cambió a:', selectedCategoryId);
-    }, [selectedCategoryId]);
 
     const searchProductById = () => {
         if (!productoId) {
@@ -228,6 +291,66 @@ const CatalogoInventario = () => {
         });
     };
 
+    const handleMassUpdateSubmit = async () => {
+        if (!massUpdateData.proveedor_id || !massUpdateData.porcentaje) {
+            setMassUpdateError('Debe seleccionar un proveedor y especificar el porcentaje.');
+            return;
+        }
+
+        const porcentaje = parseFloat(massUpdateData.porcentaje);
+        if (porcentaje < 1 || porcentaje > 100) {
+            setMassUpdateError('El porcentaje debe estar entre 1 y 100.');
+            return;
+        }
+
+        // Encontrar el proveedor seleccionado para mostrar en la confirmación
+        const proveedor = proveedores.find(p => p.proveedor_id === massUpdateData.proveedor_id);
+        setSelectedProviderForUpdate(proveedor || null);
+        setMassUpdateError(null);
+        setConfirmationModal(true);
+    };
+
+    const executeUpdateMassive = async () => {
+        setMassUpdateLoading(true);
+        setConfirmationModal(false);
+
+        try {
+            const response = await axios.post('/inventario/actualizar-precios-masivo', {
+                proveedor_id: massUpdateData.proveedor_id,
+                porcentaje_aumento: parseFloat(massUpdateData.porcentaje)
+            });
+
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 5000);
+
+            // Cerrar modal y limpiar datos
+            setMassUpdateModal(false);
+            setMassUpdateData({ proveedor_id: '', porcentaje: '' });
+            setSelectedProviderForUpdate(null);
+
+            // Refrescar productos si estamos viendo los del proveedor actualizado
+            if (selectedProviderId === massUpdateData.proveedor_id) {
+                fetchProductsByProvider(selectedProviderId);
+            }
+
+        } catch (error: any) {
+            console.error('Error en actualización masiva:', error);
+            setMassUpdateError(
+                error.response?.data?.message ||
+                'Error al actualizar los precios. Intente nuevamente.'
+            );
+        } finally {
+            setMassUpdateLoading(false);
+        }
+    };
+
+    const handleMassUpdateCancel = () => {
+        setMassUpdateModal(false);
+        setMassUpdateData({ proveedor_id: '', porcentaje: '' });
+        setMassUpdateError(null);
+        setSelectedProviderForUpdate(null);
+    };
+
     useEffect(() => {
         axios
             .get('/inventario/catalogo')
@@ -322,6 +445,131 @@ const CatalogoInventario = () => {
                     </DialogContent>
                 </Dialog>
             )}
+
+            {/* Modal para actualización masiva de precios */}
+            {(userRole === 'Bodega' || userRole === 'Administrador') && (
+                <Dialog open={massUpdateModal} onOpenChange={setMassUpdateModal}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start gap-2">
+                            <TrendingUp className="mr-2 h-4 w-4" />
+                            Actualización masiva de precios
+                        </Button>
+                    </DialogTrigger>
+
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Actualización masiva de precios</DialogTitle>
+                            <DialogDescription>
+                                Seleccione un proveedor y el porcentaje de aumento para actualizar todos sus productos.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        {massUpdateError && (
+                            <Alert variant="destructive" className="mb-4">
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{massUpdateError}</AlertDescription>
+                            </Alert>
+                        )}
+
+                        <div className="space-y-4">
+                            <div>
+                                <Label htmlFor="proveedor_update">Proveedor</Label>
+                                <SearchableSelect
+                                    options={proveedores.map((prov) => ({
+                                        value: prov.proveedor_id,
+                                        label: prov.nombre,
+                                    }))}
+                                    value={massUpdateData.proveedor_id}
+                                    onChange={(value) =>
+                                        setMassUpdateData(prev => ({ ...prev, proveedor_id: value }))
+                                    }
+                                    placeholder="Seleccione un proveedor"
+                                    className="w-full"
+                                />
+                            </div>
+
+                            <div>
+                                <Label htmlFor="porcentaje">Porcentaje de aumento (1-100%)</Label>
+                                <Input
+                                    id="porcentaje"
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    step="0.1"
+                                    placeholder="Ej: 5.5"
+                                    value={massUpdateData.porcentaje}
+                                    onChange={(e) =>
+                                        setMassUpdateData(prev => ({ ...prev, porcentaje: e.target.value }))
+                                    }
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Se aplicará tanto al precio de lista como al precio público
+                                </p>
+                            </div>
+
+                            <div className="flex gap-2 pt-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={handleMassUpdateCancel}
+                                    className="flex-1"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    onClick={handleMassUpdateSubmit}
+                                    className="flex-1"
+                                    disabled={massUpdateLoading}
+                                >
+                                    Continuar
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Modal de confirmación para actualización masiva */}
+            <Dialog open={confirmationModal} onOpenChange={setConfirmationModal}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <AlertTriangle className="h-5 w-5 text-orange-500" />
+                            Confirmar actualización masiva
+                        </DialogTitle>
+                        <DialogDescription className="text-left">
+                            <strong>¿Está seguro de que desea continuar?</strong>
+                            <br /><br />
+                            Esta acción actualizará <strong>TODOS</strong> los productos del proveedor:
+                            <br />
+                            <strong>"{selectedProviderForUpdate?.nombre}"</strong>
+                            <br /><br />
+                            Porcentaje de aumento: <strong>{massUpdateData.porcentaje}%</strong>
+                            <br /><br />
+                            Se actualizarán tanto los precios de lista como los precios públicos.
+                            <br /><br />
+                            <em>Esta acción no se puede deshacer.</em>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex gap-2 pt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setConfirmationModal(false)}
+                            className="flex-1"
+                            disabled={massUpdateLoading}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={executeUpdateMassive}
+                            className="flex-1 bg-orange-600 hover:bg-orange-700"
+                            disabled={massUpdateLoading}
+                        >
+                            {massUpdateLoading ? 'Actualizando...' : 'Confirmar actualización'}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div className="mt-7">
                 {/* Product Search Section */}
@@ -419,10 +667,74 @@ const CatalogoInventario = () => {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <ProductTable productos={productos} />
+                        <ProductTable
+                            productos={productos}
+                            onEditProduct={handleEditProduct}
+                            onViewHistory={handleViewHistory}
+                        />
                     </div>
                 </div>
             </div>
+
+            {/* Modal inteligente para editar productos y ver historial */}
+            <Dialog open={modalState.isOpen} onOpenChange={handleModalClose}>
+                <DialogContent className={`max-w-4xl ${modalState.type === 'history' ? 'max-h-[90vh]' : 'max-h-[90vh] overflow-y-auto'}`}>
+                    <DialogHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <DialogTitle>
+                                    {modalState.type === 'edit' ? 'Editar Producto' : 'Historial de Precios'}
+                                    {modalState.producto && (
+                                        <span className="text-sm font-normal text-muted-foreground ml-2">
+                                            - {modalState.producto.nombre}
+                                        </span>
+                                    )}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    {modalState.type === 'edit'
+                                        ? 'Modifica la información del producto. Los cambios de precio se guardarán automáticamente en el historial.'
+                                        : 'Visualiza todos los cambios de precio realizados a este producto.'
+                                    }
+                                </DialogDescription>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant={modalState.type === 'edit' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setModalState(prev => ({ ...prev, type: 'edit' }))}
+                                    disabled={!modalState.producto}
+                                >
+                                    Editar
+                                </Button>
+                                <Button
+                                    variant={modalState.type === 'history' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setModalState(prev => ({ ...prev, type: 'history' }))}
+                                    disabled={!modalState.producto}
+                                >
+                                    Historial
+                                </Button>
+                            </div>
+                        </div>
+                    </DialogHeader>
+
+                    <div className="mt-4">
+                        {modalState.type === 'edit' && modalState.producto && (
+                            <EditProductForm
+                                producto={modalState.producto}
+                                onSuccess={handleProductUpdateSuccess}
+                                onCancel={handleModalClose}
+                            />
+                        )}
+
+                        {modalState.type === 'history' && modalState.producto && (
+                            <PriceHistory
+                                productoId={modalState.producto.producto_id}
+                            />
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
