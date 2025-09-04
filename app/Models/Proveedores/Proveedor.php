@@ -20,9 +20,7 @@ class Proveedor extends Model
         'categoria_id',
     ];
     
-    /**
-     * Create a new factory instance for the model.
-     */
+
     protected static function newFactory()
     {
         return \Database\Factories\ProveedorFactory::new();

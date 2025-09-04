@@ -34,7 +34,7 @@ const ReportesAreaPage = () => {
             const response = await axios.get('/reportesArea/obras');
             setObras(response.data);
         } catch (error) {
-            console.error('Error fetching obras:', error);
+            console.error('Error al obtener obras:', error);
             setErrorMessage('Error al cargar las obras. Por favor, recargue la página.');
         }
     };
@@ -78,18 +78,18 @@ const ReportesAreaPage = () => {
                 fecha: new Date().toISOString().split('T')[0]
             });
             
-            // Reset form
+            // Reiniciar formulario
             setSelectedObra('');
             setDescripcion('');
             setErrors({});
             setSuccessMessage('Reporte creado exitosamente. La información ha sido guardada correctamente.');
             
-            // Clear success message after 5 seconds
+            // Limpiar mensaje de éxito después de 5 segundos
             setTimeout(() => {
                 setSuccessMessage(null);
             }, 5000);
         } catch (error: any) {
-            console.error('Error creating report:', error);
+            console.error('Error al crear reporte:', error);
             
             if (error.response?.data?.errors) {
                 const errors = error.response.data.errors;

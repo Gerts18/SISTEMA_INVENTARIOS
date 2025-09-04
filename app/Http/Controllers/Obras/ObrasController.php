@@ -70,7 +70,7 @@ class ObrasController extends Controller
 
         DB::beginTransaction();
         try {
-            // Create obra
+            // Crear la obra
             $obra = Obra::create([
                 'nombre' => $request->nombre,
                 'descripcion' => $request->descripcion,
@@ -79,10 +79,10 @@ class ObrasController extends Controller
                 'estado' => 'en_progreso',
             ]);
 
-            // Clean nombre for folder name (remove special characters)
+            // Limpiar nombre para usar en paths
             $nombreLimpio = preg_replace('/[^a-zA-Z0-9_-]/', '_', $obra->nombre);
 
-            // Upload files
+            // Subir archivos
             $filesController = new FilesController();
             for ($i = 0; $i < 3; $i++) {
                 if ($request->hasFile("archivo_{$i}")) {

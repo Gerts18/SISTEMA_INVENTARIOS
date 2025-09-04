@@ -56,7 +56,6 @@ const AutorizacionesPage = ({ autorizaciones, todasLasAutorizaciones }: Props) =
     }, {
       preserveScroll: true,
       onSuccess: () => {
-        // Optional: Add success message handling
       }
     })
   }

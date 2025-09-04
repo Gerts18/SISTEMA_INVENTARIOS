@@ -42,7 +42,7 @@ const SolicitudesDeMaterial = () => {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [paginationInfo, setPaginationInfo] = useState<Omit<PaginationData, 'data'> | null>(null)
-  const [perPage] = useState(9) // 9 items per page for grid layout
+  const [perPage] = useState(9)
 
   useEffect(() => {
     fetchSolicitudes(currentPage)
@@ -64,7 +64,7 @@ const SolicitudesDeMaterial = () => {
         has_more_pages: paginatedData.has_more_pages,
       })
     } catch (error) {
-      console.error('Error fetching solicitudes:', error)
+      console.error('Error al obtener solicitudes:', error)
     } finally {
       setLoading(false)
     }
@@ -95,7 +95,7 @@ const SolicitudesDeMaterial = () => {
       link.remove()
       window.URL.revokeObjectURL(downloadUrl)
     } catch (error) {
-      console.error('Error downloading PDF:', error)
+      console.error('Error al descargar PDF:', error)
     } finally {
       setPdfLoading(false)
     }
@@ -203,7 +203,7 @@ const SolicitudesDeMaterial = () => {
               ))}
             </div>
 
-            {/* Pagination Controls */}
+            {/* Controles de paginación */}
             {paginationInfo && paginationInfo.last_page > 1 && (
               <div className="mt-8 flex items-center justify-center space-x-4">
                 <Button
@@ -217,7 +217,7 @@ const SolicitudesDeMaterial = () => {
                 </Button>
 
                 <div className="flex items-center space-x-2">
-                  {/* Previous page */}
+                  {/* Página anterior */}
                   {currentPage > 2 && (
                     <>
                       <Button
@@ -231,7 +231,7 @@ const SolicitudesDeMaterial = () => {
                     </>
                   )}
 
-                  {/* Previous page number */}
+                  {/* Número de página anterior */}
                   {currentPage > 1 && (
                     <Button
                       variant="ghost"
@@ -242,12 +242,12 @@ const SolicitudesDeMaterial = () => {
                     </Button>
                   )}
 
-                  {/* Current page */}
+                  {/* Página actual */}
                   <Button variant="default" size="sm" disabled>
                     {currentPage}
                   </Button>
 
-                  {/* Next page number */}
+                  {/* Siguiente número de página */}
                   {currentPage < paginationInfo.last_page && (
                     <Button
                       variant="ghost"
@@ -258,7 +258,7 @@ const SolicitudesDeMaterial = () => {
                     </Button>
                   )}
 
-                  {/* Next pages */}
+                  {/* Páginas siguientes */}
                   {currentPage < paginationInfo.last_page - 1 && (
                     <>
                       {currentPage < paginationInfo.last_page - 2 && <span className="text-gray-400">...</span>}
@@ -337,7 +337,7 @@ const SolicitudesDeMaterial = () => {
                   </div>
                 </div>
 
-                {/* PDF Section */}
+                {/* Sección PDF */}
                 {selectedSolicitud.reporte_generado_url ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">

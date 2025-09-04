@@ -24,9 +24,7 @@ class Producto extends Model
         'proveedor_id',
     ];
     
-    /**
-     * Create a new factory instance for the model.
-     */
+ 
     protected static function newFactory()
     {
         return \Database\Factories\ProductoFactory::new();

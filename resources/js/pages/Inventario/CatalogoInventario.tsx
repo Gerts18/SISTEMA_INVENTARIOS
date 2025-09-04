@@ -46,7 +46,7 @@ type PaginationInfo = {
 };
 
 const CatalogoInventario = () => {
-    //Obteniendo rol del usuario
+    // Obteniendo rol del usuario
     const page = usePage<PageProps>();
     const userRole = page.props.auth?.role;
 
@@ -245,13 +245,13 @@ const CatalogoInventario = () => {
 
     const handleCategorySelect = (categoryId: string) => {
         setSelectedCategoryId(categoryId);
-        setSelectedProviderId(''); // Clear provider selection
+        setSelectedProviderId(''); // Limpiar selección de proveedor
         fetchProductsByCategory(categoryId);
     };
 
     const handleProviderSelect = (providerId: string) => {
         setSelectedProviderId(providerId);
-        setSelectedCategoryId(''); // Clear category selection
+        setSelectedCategoryId(''); // Limpiar selección de categoría
 
         if (providerId) {
             fetchProductsByProvider(providerId);

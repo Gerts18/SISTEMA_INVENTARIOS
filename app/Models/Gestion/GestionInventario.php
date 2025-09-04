@@ -24,7 +24,7 @@ class GestionInventario extends Model
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
-    public function cambiosProducto() // Corregir nombre del método
+    public function cambiosProducto()
     {
         return $this->hasMany(CambioProducto::class, 'gestion_inv_id', 'gestion_inv_id');
     }

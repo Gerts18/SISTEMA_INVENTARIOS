@@ -14,13 +14,13 @@ type Props = {
 const GestionDetalleModal = ({ gestion, onClose }: Props) => {
     if (!gestion) return null
 
-    // Function to determine if URL is an image
+    // Función para determinar si la URL es una imagen
     const isImageUrl = (url: string) => {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         return imageExtensions.some(ext => url.toLowerCase().includes(ext))
     }
 
-    // Function to get file name from URL
+    // Función para obtener el nombre del archivo desde la URL
     const getFileNameFromUrl = (url: string) => {
         try {
             const urlParts = url.split('/')
@@ -47,7 +47,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                     <div><b>Fecha:</b> {gestion.fecha}</div>
                 </div>
 
-                {/* Voucher Section */}
+                {/* Sección de Comprobante */}
                 {gestion.imagen_comprobante && (
                     <Card>
                         <CardHeader>
@@ -110,7 +110,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                     </Card>
                 )}
 
-                {/* Products Table */}
+                {/* Tabla de Productos */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">Productos modificados</CardTitle>

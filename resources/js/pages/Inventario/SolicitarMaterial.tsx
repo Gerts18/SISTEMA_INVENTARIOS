@@ -292,7 +292,7 @@ const SolicitarMaterial = () => {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* Header with Date */}
+          {/* Header con Fecha */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2">Fecha {fecha}</h2>
           </div>
@@ -384,7 +384,6 @@ const SolicitarMaterial = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end">
             <button
               type="submit"

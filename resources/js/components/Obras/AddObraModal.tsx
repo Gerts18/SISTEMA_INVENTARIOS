@@ -32,7 +32,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     });
     const [selectedFiles, setSelectedFiles] = useState<(File | null)[]>([null, null, null]);
 
-    // Calculate if form is valid
+    // Calcular si el formulario es válido
     const isFormValid = useMemo(() => {
         const hasFiles = selectedFiles.some(file => file !== null);
         const hasName = formData.nombre.trim().length > 0;
@@ -43,7 +43,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate that at least one file is selected
+        // Validar que al menos un archivo esté seleccionado
         const validFiles = selectedFiles.filter(file => file !== null);
         if (validFiles.length === 0) {
             setFormError('Debe subir al menos un archivo para crear la obra.');
@@ -60,7 +60,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
             return;
         }
 
-        // Validate fecha_final is not in the past
+        // Validar que fecha_final no sea en el pasado
         const today = new Date();
         const selectedDate = new Date(formData.fecha_final);
         if (selectedDate < today) {
@@ -71,13 +71,13 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         setFormError(null);
         setIsSubmitting(true);
 
-        // Create FormData for file upload
+        // Crear FormData para subida de archivos
         const formDataToSend = new FormData();
         formDataToSend.append('nombre', formData.nombre);
         formDataToSend.append('descripcion', formData.descripcion);
         formDataToSend.append('fecha_final', formData.fecha_final);
         
-        // Add files
+        // Agregar archivos
         validFiles.forEach((file, index) => {
             if (file) {
                 formDataToSend.append(`archivo_${index}`, file);
@@ -97,7 +97,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                 setOpen(false);
                 onSuccess();
 
-                // Reset form
+                // Reiniciar formulario
                 setFormData({
                     nombre: '',
                     descripcion: '',
@@ -106,7 +106,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
                 setSelectedFiles([null, null, null]);
                 setFormError(null);
 
-                // Refresh the page to show the new obra
+                // Recargar la página para mostrar la nueva obra
                 router.reload({ only: ['obras'] });
             } else {
                 setFormError(response.data.message || 'Error al crear la obra');
@@ -130,7 +130,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
 
     const handleFilesChange = (files: (File | null)[]) => {
         setSelectedFiles(files);
-        // Clear form error when files are added
+        // Limpiar error del formulario cuando se agregan archivos
         if (files.some(file => file !== null) && formError) {
             setFormError(null);
         }
@@ -138,7 +138,7 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newName = e.target.value;
-        //Permitir hasta 40 caracteres
+        // Permitir hasta 40 caracteres
         if (newName.length <= 40) {
             setFormData({ ...formData, nombre: newName });
 
@@ -158,13 +158,13 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
     const handleFechaFinalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newFecha = e.target.value;
         setFormData({ ...formData, fecha_final: newFecha });
-        // Clear form error when date is added
+        // Limpiar error del formulario cuando se agrega la fecha
         if (newFecha.trim() && formError) {
             setFormError(null);
         }
     };
 
-    // Get today's date in YYYY-MM-DD format for min date
+    // Obtener la fecha de hoy en formato YYYY-MM-DD para fecha mínima
     const today = new Date().toISOString().split('T')[0];
 
     return (

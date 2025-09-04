@@ -38,7 +38,7 @@ class SolicitarMaterialController extends Controller
             'pdf_url' => 'nullable|url',
         ]);
 
-        // Create the solicitud
+        // Crear la solicitud de material
          $solicitud = SolicitudMaterial::create([
             'usuario_id' => Auth::id(),
             'obra_id' => $request->obra_id,
@@ -70,7 +70,7 @@ class SolicitarMaterialController extends Controller
 
     public function getSolicitudes(Request $request)
     {
-        $perPage = $request->get('per_page', 9); // Default 9 items per page to fit grid layout
+        $perPage = $request->get('per_page', 9);  // Número de elementos por página
         $page = $request->get('page', 1);
 
         $solicitudes = SolicitudMaterial::with(['obra:obra_id,nombre', 'usuarioPideMaterial:id,name'])
