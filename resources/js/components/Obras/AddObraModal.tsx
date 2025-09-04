@@ -138,10 +138,13 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
 
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newName = e.target.value;
-        setFormData({ ...formData, nombre: newName });
-        // Clear form error when name is added
-        if (newName.trim() && formError) {
-            setFormError(null);
+        //Permitir hasta 40 caracteres
+        if (newName.length <= 40) {
+            setFormData({ ...formData, nombre: newName });
+
+            if (newName.trim() && formError) {
+                setFormError(null);
+            }
         }
     };
 
@@ -188,13 +191,19 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
 
                 <form className="space-y-4" onSubmit={handleSubmit}>
                     <div>
-                        <Label htmlFor="nombre">Nombre de la obra <span className="text-red-500">*</span></Label>
+                        <Label htmlFor="nombre">
+                            Nombre de la obra <span className="text-red-500">*</span>
+                            <span className="text-sm text-gray-500 ml-2">
+                                ({formData.nombre.length}/40 caracteres)
+                            </span>
+                        </Label>
                         <Input 
                             id="nombre" 
                             value={formData.nombre} 
                             onChange={handleNameChange}
                             placeholder="Ingrese el nombre de la obra"
                             required
+                            className={formData.nombre.length >= 45 ? 'border-orange-300' : ''}
                         />
                     </div>
 

@@ -4,7 +4,8 @@ export interface Producto {
     codigo: string;
     stock: number;
     categoria: string;
-    precio_actual: number;
+    precio_lista: number;
+    precio_publico: number;
 }
 
 export interface ProductoLista extends Producto {

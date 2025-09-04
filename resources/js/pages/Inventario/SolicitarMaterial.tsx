@@ -64,18 +64,13 @@ const SolicitarMaterial = () => {
     }, 5000)
   }
 
-  const generatePDF = async (solicitudId: number) => {
+  const generatePDF =  async (solicitudId: number) => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 20
     const lineHeight = 4
     const maxLineWidth = pageWidth - (margin * 2)
-    
-    // Configuración para columnas
-    const columnsCount = 3
-    const columnGap = 5
-    const columnWidth = (maxLineWidth - (columnGap * (columnsCount - 1))) / columnsCount
     
     let currentY = margin
     
@@ -117,97 +112,6 @@ const SolicitarMaterial = () => {
       currentY += 1
     }
     
-    // Función para agregar contenido en columnas
-    const addColumnContent = (content: string, startY: number) => {
-      if (!content.trim()) {
-        doc.setFontSize(10)
-        doc.setFont('helvetica', 'normal')
-        doc.text('Sin contenido', margin, currentY)
-        currentY += lineHeight + 2
-        return currentY
-      }
-      
-      // Dividir contenido por líneas
-      const lines = content.split('\n').filter(line => line.trim())
-      if (lines.length === 0) {
-        doc.setFontSize(10)
-        doc.setFont('helvetica', 'normal')
-        doc.text('Sin contenido', margin, currentY)
-        currentY += lineHeight + 2
-        return currentY
-      }
-      
-      let tempY = currentY
-      let currentColumn = 0
-      
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'normal')
-      
-      lines.forEach((line, index) => {
-        const xPosition = margin + (currentColumn * (columnWidth + columnGap))
-        
-        // Verificar si la línea cabe en el ancho de la columna
-        const textWidth = doc.getTextWidth(line.trim())
-        if (textWidth <= columnWidth) {
-          // Si cabe, agregar tal como está
-          if (tempY + lineHeight > pageHeight - margin) {
-            doc.addPage()
-            tempY = margin
-          }
-          doc.text(line.trim(), xPosition, tempY)
-        } else {
-          // Si no cabe, dividir la línea
-          const words = line.trim().split(' ')
-          let currentLine = ''
-          
-          words.forEach((word, wordIndex) => {
-            const testLine = currentLine ? `${currentLine} ${word}` : word
-            const testWidth = doc.getTextWidth(testLine)
-            
-            if (testWidth <= columnWidth) {
-              currentLine = testLine
-            } else {
-              if (currentLine) {
-                // Imprimir la línea actual
-                if (tempY + lineHeight > pageHeight - margin) {
-                  doc.addPage()
-                  tempY = margin
-                }
-                doc.text(currentLine, xPosition, tempY)
-                tempY += lineHeight
-                currentColumn = (currentColumn + 1) % columnsCount
-                if (currentColumn === 0) tempY += 2 // Espacio extra al cambiar de fila
-              }
-              currentLine = word
-            }
-            
-            // Si es la última palabra, imprimir la línea
-            if (wordIndex === words.length - 1 && currentLine) {
-              if (tempY + lineHeight > pageHeight - margin) {
-                doc.addPage()
-                tempY = margin
-              }
-              const finalXPosition = margin + (currentColumn * (columnWidth + columnGap))
-              doc.text(currentLine, finalXPosition, tempY)
-            }
-          })
-        }
-        
-        // Mover a la siguiente posición
-        currentColumn = (currentColumn + 1) % columnsCount
-        if (currentColumn === 0) {
-          tempY += lineHeight + 2 // Nueva fila
-        }
-      })
-      
-      // Si no terminamos en la primera columna, agregar espacio para la siguiente línea
-      if (currentColumn !== 0) {
-        tempY += lineHeight + 2
-      }
-      
-      return tempY
-    }
-    
     // Header
     addTextWithPageBreak('SOLICITUD DE MATERIAL', pageWidth / 2, 18, 'bold')
     currentY += 10
@@ -242,29 +146,33 @@ const SolicitarMaterial = () => {
       doc.setFont('helvetica', 'bold')
       checkPageBreak(14 + 1)
       doc.text(section.title, margin, currentY)
-      currentY += 8 // Espacio después del título
+      currentY += 5 // Reducido espacio después del título
       
-      // Agregar contenido en columnas
-      currentY = addColumnContent(section.content, currentY)
-      
+      // Seccion del contenido (sin etiqueta "Contenido:")
+      const content = section.content || 'Sin contenido'
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      addMultilineText(content, margin, maxLineWidth)
+
       // Linea de firma
       checkPageBreak(10) 
       doc.setFontSize(10)
       doc.text('Nombre y Firma: ________________________', pageWidth - 140, currentY)
-      currentY += 8
+      currentY += 5
       
       // Agrega menos espacio entre secciones
       if (index < sections.length - 1) {
+        
         // Opcional: Línea de separación entre secciones
         if (currentY + 5 < pageHeight - margin) {
           doc.setDrawColor(200, 200, 200)
           doc.line(margin, currentY, pageWidth - margin, currentY)
           doc.setDrawColor(0, 0, 0) // Regresa el color a negro
-          currentY += 8
+          currentY += 5
         }
       }
     })
-    
+
     // Convertir PDF a blob
     const pdfBlob = doc.output('blob')
     
@@ -302,15 +210,17 @@ const SolicitarMaterial = () => {
     } catch (error) {
       console.error('Error uploading PDF:', error)
       // Si falla la subida, al menos mostrar el PDF localmente
-/*       const pdfUrl = URL.createObjectURL(pdfBlob)
+      /*const pdfUrl = URL.createObjectURL(pdfBlob)
       window.open(pdfUrl, '_blank') */
       throw error
     }
+
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+
     if (!selectedObra) {
       showAlert('Por favor selecciona una obra', 'warning')
       return
@@ -324,7 +234,8 @@ const SolicitarMaterial = () => {
     try {
       setLoading(true)
       
-      // Primero crear la solicitud
+      //Primero enviar la solicitud
+      
       const response = await axios.post('/inventario/solicitar-material', {
         obra_id: selectedObra,
         concepto,
@@ -334,16 +245,15 @@ const SolicitarMaterial = () => {
         madera,
         equipos
       })
-      
+
       const solicitudId = response.data.solicitud_id
       
       // Luego generar y subir el PDF
       await generatePDF(solicitudId)
       
-      console.log('Solicitud enviada:', response.data)
+      /* console.log('Solicitud enviada:', response.data) */
       showAlert('Solicitud enviada correctamente y PDF generado', 'success')
 
-      // Limpiar formulario
       setSelectedObra('')
       setConcepto('')
       setHerraje('')
@@ -359,8 +269,8 @@ const SolicitarMaterial = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8">
+    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-4 md:p-8">
         {/* Alert Component */}
         {alertType && (
           <Alert className={`mb-6 ${
@@ -388,7 +298,7 @@ const SolicitarMaterial = () => {
           </div>
 
           {/* Obra and Concepto Row */}
-          <div className="grid grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Obra
@@ -428,7 +338,7 @@ const SolicitarMaterial = () => {
           </div>
 
           {/* Material Categories Grid */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Herraje */}
             <div className="bg-gray-50 rounded-lg p-4">
               <h3 className="font-medium text-gray-700 mb-3 text-center">Herraje</h3>
@@ -436,7 +346,7 @@ const SolicitarMaterial = () => {
                 value={herraje}
                 onChange={(e) => setHerraje(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -447,7 +357,7 @@ const SolicitarMaterial = () => {
                 value={barniz}
                 onChange={(e) => setBarniz(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -458,7 +368,7 @@ const SolicitarMaterial = () => {
                 value={madera}
                 onChange={(e) => setMadera(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
 
@@ -469,7 +379,7 @@ const SolicitarMaterial = () => {
                 value={equipos}
                 onChange={(e) => setEquipos(e.target.value)}
                 placeholder=""
-                className="min-h-[200px] resize-none"
+                className="min-h-[250px] md:min-h-[200px] lg:min-h-[200px] resize-none"
               />
             </div>
           </div>
@@ -479,7 +389,7 @@ const SolicitarMaterial = () => {
             <button
               type="submit"
               disabled={loading || !selectedObra || !concepto.trim()}
-              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200"
+              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white font-medium py-2 px-6 rounded-md transition-colors duration-200 w-full md:w-auto"
             >
               {loading ? 'Cargando...' : 'Enviar a bodega'}
             </button>

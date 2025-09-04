@@ -4,16 +4,26 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, FileIcon, ExternalLinkIcon, CheckCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, ImageIcon, UserIcon, ClipboardListIcon } from "lucide-react"
+import { CalendarIcon, FileIcon, ExternalLinkIcon, CheckCircleIcon, DownloadIcon, EyeIcon, FileTextIcon, ImageIcon, UserIcon, ClipboardListIcon, PlusIcon } from "lucide-react"
 import { useState, useEffect } from "react"
 import { router, usePage } from "@inertiajs/react"
 import { ViewSolicitudModal } from "./ViewSolicitudModal"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import axios from "axios"
 
 interface Archivo {
     archivo_id: number;
     nombre_archivo: string;
     url_archivo: string;
+}
+
+interface Registro {
+    id: number;
+    fecha: string;
+    concepto: string;
+    created_at: string;
 }
 
 interface Obra {
@@ -24,6 +34,7 @@ interface Obra {
     fecha_fin: string | null;
     estado: string;
     archivos: Archivo[];
+    registros?: Registro[];
 }
 
 interface ViewObraModalProps {
@@ -52,6 +63,10 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
     const [loadingSolicitudes, setLoadingSolicitudes] = useState(false);
     const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
     const [isSolicitudModalOpen, setIsSolicitudModalOpen] = useState(false);
+    const [registros, setRegistros] = useState<Registro[]>([]);
+    const [loadingRegistros, setLoadingRegistros] = useState(false);
+    const [newRegistro, setNewRegistro] = useState({ fecha: new Date().toISOString().split('T')[0], concepto: '' });
+    const [isAddingRegistro, setIsAddingRegistro] = useState(false);
     
     const { props } = usePage();
 
@@ -100,11 +115,10 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         
         try {
             setLoadingSolicitudes(true);
-            const response = await fetch(`/obras/${currentObra.obra_id}/solicitudes`);
-            const data = await response.json();
+            const response = await axios.get(`/obras/${currentObra.obra_id}/solicitudes`);
             
-            if (data.success) {
-                setSolicitudes(data.solicitudes);
+            if (response.data.success) {
+                setSolicitudes(response.data.solicitudes);
             }
         } catch (error) {
             console.error('Error fetching solicitudes:', error);
@@ -113,9 +127,60 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         }
     };
 
+    // Fetch registros cuando obra cambia
+    useEffect(() => {
+        if (currentObra && isOpen) {
+            fetchRegistros();
+        }
+    }, [currentObra, isOpen]);
+
+    const fetchRegistros = async () => {
+        if (!currentObra) return;
+        
+        try {
+            setLoadingRegistros(true);
+            const response = await axios.get(`/obras/${currentObra.obra_id}/registros`);
+            
+            if (response.data.success) {
+                setRegistros(response.data.registros);
+            }
+        } catch (error) {
+            console.error('Error fetching registros:', error);
+        } finally {
+            setLoadingRegistros(false);
+        }
+    };
+
     const handleViewSolicitud = (solicitud: Solicitud) => {
         setSelectedSolicitud(solicitud);
         setIsSolicitudModalOpen(true);
+    };
+
+    const handleAddRegistro = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!newRegistro.concepto.trim() || !currentObra) return;
+
+        try {
+            setIsAddingRegistro(true);
+            const response = await axios.post(`/obras/${currentObra.obra_id}/registros`, newRegistro);
+            
+            if (response.data.success) {
+                setNewRegistro({ fecha: new Date().toISOString().split('T')[0], concepto: '' });
+                fetchRegistros(); // Refresh registros list
+                setUpdateMessage('Registro agregado correctamente.');
+                setTimeout(() => setUpdateMessage(null), 3000);
+            } else {
+                setUpdateMessage('Error al agregar el registro.');
+                setTimeout(() => setUpdateMessage(null), 5000);
+            }
+        } catch (error) {
+            console.error('Error adding registro:', error);
+            setUpdateMessage('Error al agregar el registro.');
+            setTimeout(() => setUpdateMessage(null), 5000);
+        } finally {
+            setIsAddingRegistro(false);
+        }
     };
 
     if (!currentObra) return null;
@@ -296,6 +361,118 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                 />
                             </div>
                         )}
+
+                        {/* Registros de Obra */}
+                        <div className="space-y-4 ">
+                            <h3 className="font-semibold flex items-center gap-2">
+                                <ClipboardListIcon className="h-4 w-4" />
+                                Registros de Obra
+                            </h3>
+
+                            {/* Formulario para agregar registro */}
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <PlusIcon className="h-4 w-4" />
+                                        Agregar Nuevo Registro
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleAddRegistro} className="space-y-3">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <div>
+                                                <label className="text-sm font-medium mb-1 block">
+                                                    Fecha
+                                                </label>
+                                                <Input
+                                                    type="date"
+                                                    value={newRegistro.fecha}
+                                                    onChange={(e) => setNewRegistro(prev => ({ ...prev, fecha: e.target.value }))}
+                                                    required
+                                                    disabled={isAddingRegistro}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="text-sm font-medium mb-1 block">
+                                                    Concepto
+                                                </label>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Descripción del registro..."
+                                                    value={newRegistro.concepto}
+                                                    onChange={(e) => setNewRegistro(prev => ({ ...prev, concepto: e.target.value }))}
+                                                    required
+                                                    disabled={isAddingRegistro}
+                                                    maxLength={100}
+                                                    className={newRegistro.concepto.length > 100 ? "border-red-500 focus:border-red-500" : ""}
+                                                />
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <span className={`text-xs ${newRegistro.concepto.length > 100 ? 'text-red-500' : newRegistro.concepto.length > 90 ? 'text-orange-500' : 'text-gray-500'}`}>
+                                                        {newRegistro.concepto.length}/100 caracteres
+                                                    </span>
+                                                    {newRegistro.concepto.length > 100 && (
+                                                        <span className="text-xs text-red-500">
+                                                            Máximo 100 caracteres
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            type="submit" 
+                                            disabled={isAddingRegistro || !newRegistro.concepto.trim() || newRegistro.concepto.length > 100}
+                                            size="sm"
+                                        >
+                                            {isAddingRegistro ? 'Agregando...' : 'Agregar Registro'}
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+
+                            {/* Tabla de registros */}
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-base">
+                                        Historial de Registros
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    {loadingRegistros ? (
+                                        <div className="text-center py-4">
+                                            <p className="text-sm text-gray-500">Cargando registros...</p>
+                                        </div>
+                                    ) : registros.length > 0 ? (
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[120px]">Fecha</TableHead>
+                                                    <TableHead className="w-[200px]">Concepto</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {registros.map((registro) => (
+                                                    <TableRow key={registro.id}>
+                                                        <TableCell className="font-medium align-top whitespace-nowrap w-[120px]">
+                                                            {new Date(registro.fecha).toLocaleDateString('es-ES')}
+                                                        </TableCell>
+                                                        <TableCell className="align-top w-[200px] max-w-[200px]">
+                                                            <div className="break-words whitespace-normal hyphens-auto leading-relaxed text-sm">
+                                                                {registro.concepto}
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    ) : (
+                                        <div className="text-center py-6">
+                                            <ClipboardListIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                            <p className="text-sm text-gray-500">No hay registros para esta obra</p>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
 
                         {/* Fechas */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -525,3 +702,4 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
         </>
     );
 }
+   

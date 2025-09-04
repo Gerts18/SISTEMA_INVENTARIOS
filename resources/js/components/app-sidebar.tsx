@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Archive, BookOpen, House, Package, Truck } from 'lucide-react';
+import { Archive, BookOpen, House, Package, Truck, Clipboard, ShoppingBasketIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -18,7 +18,7 @@ const mainNavItems: NavItem[] = [
         title: 'Inventario',
         href: '/inventario',
         icon: Package,
-        permissions: 'role:Administrador|Diseño|Bodega'
+        permissions: 'role:Administrador|Diseño|Bodega|Checador|Contador'
     },
     {
         title: 'Entradas/Salidas',
@@ -27,17 +27,30 @@ const mainNavItems: NavItem[] = [
         permissions: 'role:Administrador|Bodega'
     },
     {
+        title: 'Reportar',
+        href: '/reportesArea',
+        icon: Clipboard,
+        permissions: '',
+    },
+    {
         title: 'Reportes',
         href: '/reportes',
         icon: BookOpen,
-        permissions: 'role:Administrador'
+        permissions: 'role:Administrador|Checador'
     },
     {
         title: 'Obras',
         href: '/obras',
         icon: Archive,
-        permissions: 'role:Administrador|Diseño',
+        permissions: 'role:Administrador|Diseño|Contador',
     },
+    {
+        title: 'Autorizaciones',
+        href: '/autorizaciones',
+        icon: ShoppingBasketIcon,
+        permissions: 'role:Administrador|Diseño|Bodega',
+    },
+    
 ];
 
 /* const footerNavItems: NavItem[] = [

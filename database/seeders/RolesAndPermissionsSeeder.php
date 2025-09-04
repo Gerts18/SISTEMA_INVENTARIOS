@@ -13,12 +13,14 @@ class RolesAndPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'Administrador']);
-        Role::create(['name' => 'Bodega']);
-        Role::create(['name' => 'Diseño']);
-        Role::create(['name' => 'Empleado']);
-        Role::create(['name' => 'Produccion']);
-        Role::create(['name' => 'Instalacion']);
-        Role::create(['name' => 'Barniz']);
+        Role::firstOrCreate(['name' => 'Administrador']);
+        Role::firstOrCreate(['name' => 'Bodega']);
+        Role::firstOrCreate(['name' => 'Diseño']);
+        Role::firstOrCreate(['name' => 'Empleado']);
+        Role::firstOrCreate(['name' => 'Produccion']);
+        Role::firstOrCreate(['name' => 'Instalacion']);
+        Role::firstOrCreate(['name' => 'Barniz']);
+        Role::firstOrCreate(['name' => 'Checador']);
+        Role::firstOrCreate(['name' => 'Contador']);
     }
 }

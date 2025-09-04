@@ -39,13 +39,6 @@ const TablaProductos = ({
     onCantidadEntrada(codigo, newValue)
   }
 
-  // Helpers de precio para soportar string | number | undefined
-  const toNumber = (v: any) => typeof v === 'string' ? parseFloat(v) : (typeof v === 'number' ? v : NaN)
-  const formatPrice = (v: any) => {
-    const n = toNumber(v)
-    return Number.isFinite(n) ? `$${n.toFixed(2)}` : '-'
-  }
-
   return (
     <div>
       {Object.entries(productosPorCategoria).map(([categoria, productos]) => (
@@ -75,10 +68,14 @@ const TablaProductos = ({
                     <td className="px-2 py-1 border hidden md:table-cell">{prod.stock}</td>
                     {/* Nuevas celdas de precio */}
                     <td className="px-2 py-1 border hidden md:table-cell">
-                      {formatPrice((prod as any)?.precio_lista)}
+                      {(prod as any)?.precio_lista !== undefined && (prod as any)?.precio_lista !== null
+                        ? `$${(prod as any).precio_lista}`
+                        : '-'}
                     </td>
                     <td className="px-2 py-1 border hidden md:table-cell">
-                      {formatPrice((prod as any)?.precio_publico)}
+                      {(prod as any)?.precio_publico !== undefined && (prod as any)?.precio_publico !== null
+                        ? `$${(prod as any).precio_publico}`
+                        : '-'}
                     </td>
                     <td className="px-2 py-1 border">{(prod as any).proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
@@ -136,10 +133,16 @@ const TablaProductos = ({
                     <span className="font-medium">Disponible:</span> {prod.stock}
                   </div>
                   <div>
-                    <span className="font-medium">Precio lista:</span> {formatPrice((prod as any)?.precio_lista)}
+                    <span className="font-medium">Precio lista:</span>{" "}
+                    {(prod as any)?.precio_lista !== undefined && (prod as any)?.precio_lista !== null
+                      ? `$${(prod as any).precio_lista}`
+                      : '-'}
                   </div>
                   <div>
-                    <span className="font-medium">Precio público:</span> {formatPrice((prod as any)?.precio_publico)}
+                    <span className="font-medium">Precio público:</span>{" "}
+                    {(prod as any)?.precio_publico !== undefined && (prod as any)?.precio_publico !== null
+                      ? `$${(prod as any).precio_publico}`
+                      : '-'}
                   </div>
                   <div>
                     <span className="font-medium">Proveedor:</span> {(prod as any).proveedor_nombre ?? '-'}

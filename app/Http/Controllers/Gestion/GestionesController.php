@@ -45,11 +45,14 @@ class GestionesController extends Controller
         return response()->json([
             'found' => true,
             'producto' => [
-                'id' => $producto->producto_id,
+                'id' => (int) $producto->producto_id,
                 'nombre' => $producto->nombre,
                 'codigo' => $producto->codigo,
-                'stock' => $producto->stock,
-                'precio_actual' => $producto->precio_actual,
+                'stock' => (int) $producto->stock,
+                // devolver precios correctos y numéricos
+                'precio_lista' => $producto->precio_lista !== null ? (float) $producto->precio_lista : null,
+                'precio_publico' => $producto->precio_publico !== null ? (float) $producto->precio_publico : null,
+                // mantener compatibilidad con el front
                 'categoria' => $categoria,
                 'proveedor_nombre' => $proveedorNombre,
                 'proveedor_categoria' => $categoria,
