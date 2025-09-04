@@ -14,13 +14,13 @@ type Props = {
 const GestionDetalleModal = ({ gestion, onClose }: Props) => {
     if (!gestion) return null
 
-    // Function to determine if URL is an image
+    // Función para determinar si la URL es una imagen
     const isImageUrl = (url: string) => {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']
         return imageExtensions.some(ext => url.toLowerCase().includes(ext))
     }
 
-    // Function to get file name from URL
+    // Función para obtener el nombre del archivo desde la URL
     const getFileNameFromUrl = (url: string) => {
         try {
             const urlParts = url.split('/')
@@ -47,7 +47,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                     <div><b>Fecha:</b> {gestion.fecha}</div>
                 </div>
 
-                {/* Voucher Section */}
+                {/* Sección de Comprobante */}
                 {gestion.imagen_comprobante && (
                     <Card>
                         <CardHeader>
@@ -110,7 +110,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                     </Card>
                 )}
 
-                {/* Products Table */}
+                {/* Tabla de Productos */}
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-lg">Productos modificados</CardTitle>
@@ -122,7 +122,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                     <tr className="border-b">
                                         <th className="text-left py-2">Nombre</th>
                                         <th className="text-left py-2">Código</th>
-                                        <th className="text-right py-2">Cantidad</th>
+                                        <th className="text-center py-2">Cantidad</th>
                                         <th className="text-right py-2">P. Lista</th>
                                         <th className="text-right py-2">P. Público</th>
                                     </tr>
@@ -138,7 +138,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                             <tr key={cambio.cambio_producto_id} className="border-b">
                                                 <td className="py-2">{cambio.producto?.nombre}</td>
                                                 <td className="py-2">{cambio.producto?.codigo}</td>
-                                                <td className="text-right py-2">{cambio.cantidad}</td>
+                                                <td className="text-center py-2">{cambio.cantidad}</td>
                                                 <td className="text-right py-2">
                                                     {typeof precioListaNum === "number" && !isNaN(precioListaNum)
                                                         ? `$${precioListaNum.toFixed(2)}`

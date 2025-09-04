@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Productos\CategoriaProducto;
 use App\Models\Proveedores\Proveedor;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class InventariosController extends Controller
 {
@@ -47,6 +49,7 @@ class InventariosController extends Controller
     {
         $productos = Producto::where('proveedor_id', $proveedor_id)
             ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico', 'proveedor_id')
+            ->orderBy('created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
             ->simplePaginate(10);
         
         return response()->json([
@@ -65,6 +68,7 @@ class InventariosController extends Controller
         $productos = Producto::join('proveedores', 'productos.proveedor_id', '=', 'proveedores.proveedor_id')
             ->where('proveedores.categoria_id', $categoria_id)
             ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_lista', 'productos.precio_publico')
+            ->orderBy('productos.created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
             ->simplePaginate(10);
         
         return response()->json([
@@ -147,5 +151,72 @@ class InventariosController extends Controller
         Producto::create($request->all());
 
         return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
+    }
+
+    public function aumentoMasivo(Request $request)
+    {
+        // Validación de entrada - ajustada para que proveedor_id pueda ser string o entero
+        $request->validate([
+            'proveedor_id' => 'required|exists:proveedores,proveedor_id',
+            'porcentaje_aumento' => 'required|numeric|min:0.01|max:100'
+        ], [
+            'proveedor_id.required' => 'El proveedor es obligatorio.',
+            'proveedor_id.exists' => 'El proveedor seleccionado no existe.',
+            'porcentaje_aumento.required' => 'El porcentaje de aumento es obligatorio.',
+            'porcentaje_aumento.numeric' => 'El porcentaje debe ser un número.',
+            'porcentaje_aumento.min' => 'El porcentaje debe ser mayor a 0.',
+            'porcentaje_aumento.max' => 'El porcentaje no puede ser mayor a 100.'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $proveedor_id = $request->input('proveedor_id');
+            $porcentaje = $request->input('porcentaje_aumento');
+            $multiplicador = 1 + ($porcentaje / 100);
+
+            // Obtener todos los productos del proveedor
+            $productos = Producto::where('proveedor_id', $proveedor_id)->get();
+
+            if ($productos->isEmpty()) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'No se encontraron productos para este proveedor.'
+                ], 404);
+            }
+
+            $productosActualizados = 0;
+
+            foreach ($productos as $producto) {
+                // Calcular nuevos precios
+                $nuevoPrecioLista = round($producto->precio_lista * $multiplicador, 2);
+                $nuevoPrecioPublico = round($producto->precio_publico * $multiplicador, 2);
+
+                // Actualizar el producto
+                // El Observer ProductoObserver se encargará automáticamente de crear el historial
+                $producto->update([
+                    'precio_lista' => $nuevoPrecioLista,
+                    'precio_publico' => $nuevoPrecioPublico,
+                ]);
+
+                $productosActualizados++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Se actualizaron exitosamente {$productosActualizados} productos con un aumento del {$porcentaje}%.",
+                'productos_actualizados' => $productosActualizados,
+                'proveedor_id' => $proveedor_id
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Error interno del servidor al procesar la actualización masiva.',
+                'error' => config('app.debug') ? $e->getMessage() : 'Error interno'
+            ], 500);
+        }
     }
 }

@@ -4,10 +4,13 @@ namespace App\Models\Productos;
 
 use App\Models\Gestion\GestionInventario;
 use App\Models\Proveedores\Proveedor;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
+    use HasFactory;
+    
     protected $table = 'productos';
     protected $primaryKey = 'producto_id';
     public $timestamps = true;
@@ -20,6 +23,12 @@ class Producto extends Model
         'precio_publico',
         'proveedor_id',
     ];
+    
+ 
+    protected static function newFactory()
+    {
+        return \Database\Factories\ProductoFactory::new();
+    }
 
     public static $rules = [
         'nombre' => 'required|string|max:255',

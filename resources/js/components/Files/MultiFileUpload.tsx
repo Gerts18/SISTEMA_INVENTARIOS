@@ -34,7 +34,7 @@ const MultiFileUpload = ({
         const newErrors = [...fileSizeErrors]
         
         if (file) {
-            // Check file size
+            // Checar tamaño del archivo
             if (file.size > MAX_FILE_SIZE) {
                 newErrors[index] = `El archivo es demasiado grande. Tamaño máximo permitido: 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`
                 event.target.value = ''
@@ -82,7 +82,7 @@ const MultiFileUpload = ({
         setFileSizeErrors(newErrors)
         onFilesChange(newFiles)
 
-        // Clear the input
+
         const input = document.getElementById(`file-upload-${index}`) as HTMLInputElement
         if (input) input.value = ''
     }

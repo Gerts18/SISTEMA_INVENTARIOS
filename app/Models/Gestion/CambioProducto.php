@@ -3,7 +3,7 @@
 namespace App\Models\Gestion;
 
 use App\Models\Productos\Producto;
-use App\Models\Gestion\GestionInventario; // Agregar importación
+use App\Models\Gestion\GestionInventario; 
 use Illuminate\Database\Eloquent\Model;
 
 class CambioProducto extends Model

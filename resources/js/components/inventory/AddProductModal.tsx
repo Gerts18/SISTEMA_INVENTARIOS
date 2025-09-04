@@ -84,7 +84,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
                 onSuccess();
                 onProductCreated();
 
-                // Reset form but keep selected category
+
                 setFormData({
                     proveedor_id: '',
                     nombre: '',
@@ -99,7 +99,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
         });
     };
 
-    // Update category when prop changes
+    // Actualizar categoria_id cuando selectedCategoryId cambie
     React.useEffect(() => {
         setFormData((prev) => ({ ...prev, categoria_id: selectedCategoryId }));
     }, [selectedCategoryId]);

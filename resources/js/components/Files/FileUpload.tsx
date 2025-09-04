@@ -14,16 +14,16 @@ const FileUpload = ({ onFileSelect, selectedFile }: FileUploadProps) => {
     const [preview, setPreview] = useState<string | null>(null)
     const [fileSizeError, setFileSizeError] = useState<string | null>(null)
     
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB en bytes
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null
         
         if (file) {
-            // Check file size
+            // Checar el tamaño del archivo
             if (file.size > MAX_FILE_SIZE) {
                 setFileSizeError(`El archivo es demasiado grande. Tamaño máximo permitido: 10MB. Tamaño actual: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
-                // Clear the input
+                // Limpiar el input
                 event.target.value = ''
                 onFileSelect(null)
                 setPreview(null)

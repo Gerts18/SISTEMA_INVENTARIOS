@@ -146,7 +146,7 @@ class GestionesController extends Controller
                 'imagen_comprobante' => null,
             ]);
 
-            // Process products
+            // Actualizar stock y registrar cambios
             foreach ($productos as $prod) {
                 $producto = Producto::where('codigo', $prod['codigo'])->lockForUpdate()->first();
                 if (!$producto) {

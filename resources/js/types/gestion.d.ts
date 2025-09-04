@@ -17,6 +17,7 @@ export interface Gestion  {
     fecha: string
     cambios_producto: CambioProducto[]
     imagen_comprobante?: string
+    created_at: string
 }
 
 export interface Props  {

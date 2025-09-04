@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Autorizaciones\AutorizacionesController;
 use App\Http\Controllers\Files\FilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -10,7 +11,8 @@ use App\Http\Controllers\Inventarios\SolicitarMaterialController;
 use App\Http\Controllers\Gestion\GestionesController;
 use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
-
+use App\Http\Controllers\Productos\ProductosController;
+use App\Http\Controllers\ReportesArea\ReportesAreaController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -28,7 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     //Rutas de inventario
 
-    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega|Checador']], function (){
+    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega|Checador|Contador']], function (){
 
         Route::get('/',[InventariosController::class, 'show'])->name('inventario');
         Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
@@ -39,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
         Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
         
+        // Ruta para actualización masiva de precios
+        Route::post('/actualizar-precios-masivo', [InventariosController::class, 'aumentoMasivo'])->name('inventario.actualizar-precios-masivo');
+        
         // Solicitar Material routes
         Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
@@ -48,6 +53,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Solicitudes de Material routes
         Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
         Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
+
+        // Rutas para productos
+        Route::post('/productos', [ProductosController::class, 'store'])->name('productos.store');
+        Route::patch('/productos/{id}', [ProductosController::class, 'update'])->name('productos.update');
+        Route::get('/productos/{id}/historial-precios', [ProductosController::class, 'obtenerHistorialPrecios'])->name('productos.historial-precios');
 
     });
 
@@ -71,16 +81,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     });
 
-    //Reportes de inventario
-    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño|Checador']], function () {
+    //Obras
+    Route::group(['prefix' => 'obras', 'middleware' => ['role:Administrador|Diseño|Contador']], function () {
 
         Route::get('/', [ObrasController::class, 'show'])->name('obras');
         Route::post('/create', [ObrasController::class, 'store'])->name('obras.store');
         Route::patch('/{obra}/status', [ObrasController::class, 'updateStatus'])->name('obras.updateStatus');
         Route::get('/{obra}/solicitudes', [ObrasController::class, 'getSolicitudes'])->name('obras.solicitudes');
-
+        Route::get('/{obra}/registros', [ObrasController::class, 'getRegistros'])->name('obras.registros');
+        Route::post('/{obra}/registros', [ObrasController::class, 'storeRegistro'])->name('obras.registros.store');
     });
 
+    //Reportes de Area
+    Route::group(['prefix' => 'reportesArea'], function () {
+        Route::get('/', [ReportesAreaController::class, 'show'])->name('reportesArea');
+        Route::get('/obras', [ReportesAreaController::class, 'getObras'])->name('reportesArea.obras');
+        Route::post('/create', [ReportesAreaController::class, 'store'])->name('reportesArea.store');
+    });
+
+    //Autorizacion de compras
+    Route::group(['prefix' => 'autorizaciones', 'middleware' => ['role:Administrador|Diseño|Bodega']], function () {
+        Route::get('/', [AutorizacionesController::class, 'show'])->name('autorizaciones');
+        Route::post('/create', [AutorizacionesController::class, 'store'])->name('autorizaciones.store');
+        Route::patch('/{autorizacion}/status', [AutorizacionesController::class, 'updateStatus'])->name('autorizaciones.updateStatus');
+    });
 
 });
 
