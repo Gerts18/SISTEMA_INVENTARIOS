@@ -114,14 +114,24 @@ const ReportesPage = ({ gestiones, reportes, fechaSeleccionada, fechasDisponible
     }
 
     const formatDateForDisplay = (dateString: string) => {
-        const date = new Date(dateString)
+        // Usar la fecha tal como viene del backend sin conversiones de zona horaria
+        const [year, month, day] = dateString.split('-').map(Number)
+        const date = new Date(year, month - 1, day) // month - 1 porque los meses en JS van de 0-11
+        
         const today = new Date()
+        const todayString = today.getFullYear() + '-' + 
+                           String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(today.getDate()).padStart(2, '0')
+        
         const yesterday = new Date(today)
         yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayString = yesterday.getFullYear() + '-' + 
+                             String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
+                             String(yesterday.getDate()).padStart(2, '0')
 
-        if (dateString === today.toISOString().split('T')[0]) {
+        if (dateString === todayString) {
             return 'Hoy'
-        } else if (dateString === yesterday.toISOString().split('T')[0]) {
+        } else if (dateString === yesterdayString) {
             return 'Ayer'
         } else {
             return date.toLocaleDateString('es-ES', { 

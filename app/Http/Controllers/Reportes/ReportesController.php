@@ -23,7 +23,8 @@ class ReportesController extends Controller
 
     public function show(Request $request)
     {
-        $fecha = $request->get('fecha', Carbon::today()->format('Y-m-d'));
+        // Asegurar que la fecha por defecto sea la fecha actual en formato Y-m-d
+        $fecha = $request->get('fecha', now()->format('Y-m-d'));
         $gestionesPage = $request->get('gestiones_page', 1);
         $reportesPage = $request->get('reportes_page', 1);
         $perPage = 8; // Items per page
@@ -50,13 +51,15 @@ class ReportesController extends Controller
         ->paginate($perPage, ['*'], 'reportes_page', $reportesPage)
         ->withQueryString();
 
-        // Obtener las fechas disponibles de ambas tablas
+        // Obtener las fechas disponibles y asegurar formato consistente
         $fechasGestiones = GestionInventario::selectRaw('DATE(fecha) as fecha')
             ->distinct()
+            ->orderBy('fecha', 'desc')
             ->pluck('fecha');
             
         $fechasReportes = Reporte::selectRaw('DATE(fecha) as fecha')
             ->distinct()
+            ->orderBy('fecha', 'desc')
             ->pluck('fecha');
 
         $fechasDisponibles = $fechasGestiones->merge($fechasReportes)
@@ -65,6 +68,7 @@ class ReportesController extends Controller
             ->reverse()
             ->values()
             ->map(function($fecha) {
+                // Asegurar formato Y-m-d consistente
                 return Carbon::parse($fecha)->format('Y-m-d');
             });
 
