@@ -24,14 +24,19 @@ interface ProductTableProps {
     className?: string;
     onEditProduct?: (producto: Producto) => void;
     onViewHistory?: (producto: Producto) => void;
+    userRole?: string;
 }
 
 export const ProductTable: React.FC<ProductTableProps> = ({
     productos,
     className = '',
     onEditProduct,
-    onViewHistory
+    onViewHistory,
+    userRole
 }) => {
+    const showActions = userRole === 'Bodega' || userRole === 'Administrador';
+    const totalColumns = showActions ? 6 : 5;
+
     return (
         <table className={`w-full border ${className}`}>
             <thead>
@@ -41,13 +46,15 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     <th className="border px-4 py-2">Stock</th>
                     <th className="border px-4 py-2">Precio Lista</th>
                     <th className="border px-4 py-2">Precio Público</th>
-                    <th className="border px-4 py-2 w-16">Acciones</th>
+                    {showActions && (
+                        <th className="border px-4 py-2 w-16">Acciones</th>
+                    )}
                 </tr>
             </thead>
             <tbody>
                 {productos.length === 0 ? (
                     <tr>
-                        <td colSpan={6} className="border px-4 py-8 text-center text-gray-500">
+                        <td colSpan={totalColumns} className="border px-4 py-8 text-center text-gray-500">
                             No hay productos para mostrar
                         </td>
                     </tr>
@@ -59,42 +66,44 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                             <td className="border px-4 py-2">{prod.stock}</td>
                             <td className="border px-4 py-2">${prod.precio_lista}</td>
                             <td className="border px-4 py-2">${prod.precio_publico}</td>
-                            <td className="border px-4 py-2 text-center">
-                                <DropdownMenu modal={false}>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            aria-label={`Acciones para ${prod.nombre}`}
-                                        >
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuItem
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onEditProduct?.(prod);
-                                            }}
-                                            className="cursor-pointer"
-                                        >
-                                            <Edit className="mr-2 h-4 w-4" />
-                                            Editar Producto
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onViewHistory?.(prod);
-                                            }}
-                                            className="cursor-pointer"
-                                        >
-                                            <History className="mr-2 h-4 w-4" />
-                                            Ver Historial de Precios
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </td>
+                            {showActions && (
+                                <td className="border px-4 py-2 text-center">
+                                    <DropdownMenu modal={false}>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0"
+                                                aria-label={`Acciones para ${prod.nombre}`}
+                                            >
+                                                <MoreVertical className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onEditProduct?.(prod);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                <Edit className="mr-2 h-4 w-4" />
+                                                Editar Producto
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onViewHistory?.(prod);
+                                                }}
+                                                className="cursor-pointer"
+                                            >
+                                                <History className="mr-2 h-4 w-4" />
+                                                Ver Historial de Precios
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </td>
+                            )}
                         </tr>
                     ))
                 )}

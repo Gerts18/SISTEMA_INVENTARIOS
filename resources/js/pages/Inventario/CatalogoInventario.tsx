@@ -671,6 +671,7 @@ const CatalogoInventario = () => {
                             productos={productos}
                             onEditProduct={handleEditProduct}
                             onViewHistory={handleViewHistory}
+                            userRole={userRole}
                         />
                     </div>
                 </div>
