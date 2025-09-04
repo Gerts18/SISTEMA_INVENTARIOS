@@ -42,6 +42,7 @@ const mainNavItems: NavItem[] = [
         title: 'Obras',
         href: '/obras',
         icon: Archive,
+
         permissions: 'role:Administrador|Diseño|Contador',
     },
     {
