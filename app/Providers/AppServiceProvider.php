@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
         // Registrar el Observer para el modelo Producto
         Producto::observe(ProductoObserver::class);
 
+        // Forzar HTTPS en producción
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }       
