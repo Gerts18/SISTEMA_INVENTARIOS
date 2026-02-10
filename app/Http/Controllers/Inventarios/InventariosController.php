@@ -18,13 +18,16 @@ class InventariosController extends Controller
 
     public function show()
     {
-        return Inertia::render('Inventario/InventarioPage',
+        return Inertia::render(
+            'Inventario/InventarioPage',
             [
                 'contador' => $this->contador
             ]
         );
     }
 
+    // Métodos de proveedores comentados - funcionalidad removida
+    /*
     public function showProveedores()
     {
         $proveedores = Proveedor::all(['proveedor_id' ,'nombre', 'categoria_id']);
@@ -33,23 +36,41 @@ class InventariosController extends Controller
             'proveedores' => $proveedores,
         ]);
     }
+    */
 
-    public function buscarPorCodigo($codigo)
+    // Búsqueda de productos por nombre (parcial o completo)
+    public function buscarPorNombre($nombre)
     {
-        $producto = Producto::where('codigo', $codigo)->first();
+        // Decodificar y limpiar el nombre
+        $nombre = urldecode($nombre);
+        $nombre = trim($nombre);
 
-        if (!$producto) {
-            return response()->json(['error' => 'Producto no encontrado.'], 404);
+        // Si está vacío, devolver lista paginada
+        if (empty($nombre)) {
+            return $this->listarProductos(request());
         }
 
-        return response()->json(['producto' => $producto]);
+        // Búsqueda parcial por nombre (case insensitive)
+        $productos = Producto::whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($nombre) . '%'])
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico')
+            ->orderBy('nombre', 'asc')
+            ->limit(20) // Limitar resultados
+            ->get();
+
+        if ($productos->isEmpty()) {
+            return response()->json(['message' => 'No se encontraron productos con ese nombre.'], 404);
+        }
+
+        return response()->json(['productos' => $productos]);
     }
 
+    // Métodos de proveedores comentados - funcionalidad removida
+    /*
     public function productosPorProveedor($proveedor_id)
     {
         $productos = Producto::where('proveedor_id', $proveedor_id)
             ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico', 'proveedor_id')
-            ->orderBy('created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
+            ->orderBy('created_at', 'asc')
             ->simplePaginate(10);
         
         return response()->json([
@@ -61,14 +82,17 @@ class InventariosController extends Controller
             ]
         ]);
     }
+    */
 
 
+    // Métodos de categorías comentados - funcionalidad removida
+    /*
     public function productosPorCategoria($categoria_id)
     {
         $productos = Producto::join('proveedores', 'productos.proveedor_id', '=', 'proveedores.proveedor_id')
             ->where('proveedores.categoria_id', $categoria_id)
             ->select('productos.producto_id', 'productos.nombre', 'productos.codigo', 'productos.stock', 'productos.precio_lista', 'productos.precio_publico')
-            ->orderBy('productos.created_at', 'asc') // Ordenar por fecha de creación (más antiguos primero)
+            ->orderBy('productos.created_at', 'asc')
             ->simplePaginate(10);
         
         return response()->json([
@@ -88,15 +112,42 @@ class InventariosController extends Controller
             'categorias' => $categorias,
         ]);
     }
+    */
+
+    // Nuevo método para listar todos los productos con paginación y ordenamiento
+    public function listarProductos(Request $request)
+    {
+        // Obtener parámetro de ordenamiento (asc o desc)
+        $orden = $request->query('orden', 'desc'); // Por defecto: más recientes primero
+
+        // Validar que el orden sea válido
+        if (!in_array($orden, ['asc', 'desc'])) {
+            $orden = 'desc';
+        }
+
+        $productos = Producto::select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico')
+            ->orderBy('created_at', $orden)
+            ->simplePaginate(20);
+
+        return response()->json([
+            'productos' => $productos->items(),
+            'pagination' => [
+                'next_page' => $productos->nextPageUrl(),
+                'prev_page' => $productos->previousPageUrl(),
+                'current_page' => $productos->currentPage()
+            ]
+        ]);
+    }
 
     public function create()
     {
         return Inertia::render('Inventario/CrearInventario');
     }
 
+    // Métodos de proveedores comentados - funcionalidad removida
+    /*
     public function storeProveedor(Request $request)
     {
-        // Mensajes personalizados para la validación
         $messages = [
             'nombre.required' => 'El nombre del proveedor es obligatorio.',
             'nombre.unique' => 'Ya existe un proveedor con ese nombre.',
@@ -104,28 +155,25 @@ class InventariosController extends Controller
             'categoria_id.exists' => 'La categoría seleccionada no existe.',
         ];
 
-        // Validación de los datos del formulario
         $request->validate([
             'nombre' => 'required|string|max:255|unique:proveedores,nombre',
             'categoria_id' => 'required|exists:categorias_productos,categoria_id',
         ], $messages);
 
-        // Crear un nuevo proveedor
         Proveedor::create([
             'nombre' => $request->nombre,
             'categoria_id' => $request->categoria_id,
         ]);
 
-        // Redirigir con un mensaje de éxito
-        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');    }
+        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
+    }
+    */
 
+    // Simplificado: solo requiere nombre para crear producto
     public function store(Request $request)
     {
         $messages = [
-            'nombre.required' => 'El nombre del proveedor es obligatorio.',
-            'codigo.required' => 'El código del producto es obligatorio.',
-            'codigo.max' => 'El código no debe ser mayor a 6 caracteres.',
-            'codigo.unique' => 'Este código ya está en uso.',
+            'nombre.required' => 'El nombre del producto es obligatorio.',
             'stock.integer' => 'La cantidad debe ser un número entero.',
             'stock.min' => 'La cantidad no puede ser negativa.',
             'precio_lista.required' => 'El precio de lista es obligatorio.',
@@ -134,89 +182,36 @@ class InventariosController extends Controller
             'precio_publico.required' => 'El precio público es obligatorio.',
             'precio_publico.numeric' => 'El precio público debe ser un número.',
             'precio_publico.min' => 'El precio público debe ser mayor o igual a 0.',
-            'categoria_id.required' => 'Debe seleccionar una categoría.',
-            'categoria_id.exists' => 'La categoría seleccionada no existe.',
         ];
 
-        // Validación con mensajes personalizados
+        // Validación simplificada - solo nombre y precios son requeridos
         $request->validate([
             'nombre' => 'required|string|max:255',
-            'codigo' => 'required|string|max:6|unique:productos,codigo',
-            'stock' => 'integer|min:0',
+            'stock' => 'nullable|integer|min:0',
             'precio_lista' => 'required|numeric|min:0',
             'precio_publico' => 'required|numeric|min:0',
-            'proveedor_id' => 'required|exists:proveedores,proveedor_id',
         ], $messages);
 
-        Producto::create($request->all());
-
-        return redirect()->route('inventario')->with('success', 'Producto creado exitosamente.');
-    }
-
-    public function aumentoMasivo(Request $request)
-    {
-        // Validación de entrada - ajustada para que proveedor_id pueda ser string o entero
-        $request->validate([
-            'proveedor_id' => 'required|exists:proveedores,proveedor_id',
-            'porcentaje_aumento' => 'required|numeric|min:0.01|max:100'
-        ], [
-            'proveedor_id.required' => 'El proveedor es obligatorio.',
-            'proveedor_id.exists' => 'El proveedor seleccionado no existe.',
-            'porcentaje_aumento.required' => 'El porcentaje de aumento es obligatorio.',
-            'porcentaje_aumento.numeric' => 'El porcentaje debe ser un número.',
-            'porcentaje_aumento.min' => 'El porcentaje debe ser mayor a 0.',
-            'porcentaje_aumento.max' => 'El porcentaje no puede ser mayor a 100.'
+        // El código se genera automáticamente en el Observer
+        $producto = Producto::create([
+            'nombre' => $request->nombre,
+            'stock' => $request->stock ?? 0,
+            'precio_lista' => $request->precio_lista,
+            'precio_publico' => $request->precio_publico,
         ]);
 
-        try {
-            DB::beginTransaction();
-
-            $proveedor_id = $request->input('proveedor_id');
-            $porcentaje = $request->input('porcentaje_aumento');
-            $multiplicador = 1 + ($porcentaje / 100);
-
-            // Obtener todos los productos del proveedor
-            $productos = Producto::where('proveedor_id', $proveedor_id)->get();
-
-            if ($productos->isEmpty()) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'No se encontraron productos para este proveedor.'
-                ], 404);
-            }
-
-            $productosActualizados = 0;
-
-            foreach ($productos as $producto) {
-                // Calcular nuevos precios
-                $nuevoPrecioLista = round($producto->precio_lista * $multiplicador, 2);
-                $nuevoPrecioPublico = round($producto->precio_publico * $multiplicador, 2);
-
-                // Actualizar el producto
-                // El Observer ProductoObserver se encargará automáticamente de crear el historial
-                $producto->update([
-                    'precio_lista' => $nuevoPrecioLista,
-                    'precio_publico' => $nuevoPrecioPublico,
-                ]);
-
-                $productosActualizados++;
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => "Se actualizaron exitosamente {$productosActualizados} productos con un aumento del {$porcentaje}%.",
-                'productos_actualizados' => $productosActualizados,
-                'proveedor_id' => $proveedor_id
-            ], 200);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return response()->json([
-                'message' => 'Error interno del servidor al procesar la actualización masiva.',
-                'error' => config('app.debug') ? $e->getMessage() : 'Error interno'
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Producto creado exitosamente.',
+            'producto' => $producto
+        ], 201);
     }
+
+    // Método de aumento masivo comentado - funcionalidad de proveedores removida
+    /*
+    public function aumentoMasivo(Request $request)
+    {
+        // ... (código anterior)
+    }
+    */
 }

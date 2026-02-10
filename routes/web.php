@@ -30,26 +30,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     //Rutas de inventario
 
-    Route::group( ['prefix' => 'inventario','middleware' => ['role:Administrador|Diseño|Bodega|Checador|Contador']], function (){
+    Route::group(['prefix' => 'inventario', 'middleware' => ['role:Administrador|Diseño|Bodega|Checador|Contador']], function () {
 
-        Route::get('/',[InventariosController::class, 'show'])->name('inventario');
-        Route::post('/create',[InventariosController::class, 'store'])->name('inventario.store');
-        Route::post('/createProveedor',[InventariosController::class, 'storeProveedor'])->name('inventario.storeProveedor');
-        Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
-        Route::get('/productos-proveedor/{proveedor_id}', [InventariosController::class, 'productosPorProveedor'])->name('inventario.productosPorProveedor');
-        Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
-        Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
-        Route::get('/buscar/{codigo}', [InventariosController::class, 'buscarPorCodigo'])->name('inventario.buscar');
-        
-        // Ruta para actualización masiva de precios
-        Route::post('/actualizar-precios-masivo', [InventariosController::class, 'aumentoMasivo'])->name('inventario.actualizar-precios-masivo');
-        
+        Route::get('/', [InventariosController::class, 'show'])->name('inventario');
+        Route::post('/create', [InventariosController::class, 'store'])->name('inventario.store');
+
+        // Rutas de proveedores y categorías comentadas - funcionalidad removida
+        // Route::post('/createProveedor',[InventariosController::class, 'storeProveedor'])->name('inventario.storeProveedor');
+        // Route::get('/catalogo',[InventariosController::class, 'catalogo'])->name('inventario.catalogo');
+        // Route::get('/productos-proveedor/{proveedor_id}', [InventariosController::class, 'productosPorProveedor'])->name('inventario.productosPorProveedor');
+        // Route::get('/proveedores', [InventariosController::class, 'showProveedores'])->name('inventario.proveedores');
+        // Route::get('/productos/{categoria_id}', [InventariosController::class, 'productosPorCategoria']);
+        // Route::post('/actualizar-precios-masivo', [InventariosController::class, 'aumentoMasivo'])->name('inventario.actualizar-precios-masivo');
+
+        // Nuevas rutas simplificadas
+        Route::get('/listar-productos', [InventariosController::class, 'listarProductos'])->name('inventario.listar');
+        Route::get('/buscar/{nombre}', [InventariosController::class, 'buscarPorNombre'])->name('inventario.buscar');
+
         // Solicitar Material routes
         Route::get('/solicitar-material', [SolicitarMaterialController::class, 'index'])->name('inventario.solicitar-material');
         Route::get('/solicitar-material/obras', [SolicitarMaterialController::class, 'getObras'])->name('inventario.solicitar-material.obras');
         Route::post('/solicitar-material', [SolicitarMaterialController::class, 'store'])->name('inventario.solicitar-material.store');
         Route::put('/solicitar-material/{solicitudId}/pdf-url', [SolicitarMaterialController::class, 'updatePdfUrl']);
-        
+
         // Solicitudes de Material routes
         Route::get('/solicitudes-material', [SolicitarMaterialController::class, 'indexSolicitudes'])->name('inventario.solicitudes-material');
         Route::get('/solicitudes-material/data', [SolicitarMaterialController::class, 'getSolicitudes'])->name('inventario.solicitudes-material.data');
@@ -58,7 +61,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/productos', [ProductosController::class, 'store'])->name('productos.store');
         Route::patch('/productos/{id}', [ProductosController::class, 'update'])->name('productos.update');
         Route::get('/productos/{id}/historial-precios', [ProductosController::class, 'obtenerHistorialPrecios'])->name('productos.historial-precios');
-
     });
 
     Route::post('/files/solicitud-material/{solicitudId}/{obraId}/{nombreObra}', [FilesController::class, 'subirPDFSolicitudMaterial'])->middleware(['auth', 'verified']);
@@ -67,18 +69,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::group(['prefix' => 'gestion', 'middleware' => ['role:Administrador|Bodega']], function () {
 
         Route::get('/', [GestionesController::class, 'show'])->name('gestion');
-        
+
         Route::get('/producto-existencia/{codigo}', [GestionesController::class, 'productoExistencia']);
+        Route::get('/buscar-productos/{nombre}', [GestionesController::class, 'buscarProductosPorNombre']);
 
         Route::post('/registrar', [GestionesController::class, 'registrarGestion']);
-    
     });
 
     //Reportes de inventario
     Route::group(['prefix' => 'reportes', 'middleware' => ['role:Administrador|Checador']], function () {
 
         Route::get('/', [ReportesController::class, 'show'])->name('reportes');
-
     });
 
     //Obras
@@ -105,7 +106,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/create', [AutorizacionesController::class, 'store'])->name('autorizaciones.store');
         Route::patch('/{autorizacion}/status', [AutorizacionesController::class, 'updateStatus'])->name('autorizaciones.updateStatus');
     });
-
 });
 
 require __DIR__ . '/settings.php';

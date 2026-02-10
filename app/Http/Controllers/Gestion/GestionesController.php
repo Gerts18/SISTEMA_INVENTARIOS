@@ -28,19 +28,14 @@ class GestionesController extends Controller
         );
     }
 
+    // Búsqueda de producto por código (simplificada sin proveedor)
     public function productoExistencia($codigo)
     {
-        $producto = Producto::with(['proveedor.categoria'])
-            ->where('codigo', $codigo)
-            ->first();
+        $producto = Producto::where('codigo', $codigo)->first();
 
         if (!$producto) {
             return response()->json(['found' => false]);
         }
-
-        $proveedor = $producto->proveedor;
-        $categoria = $proveedor && $proveedor->categoria ? $proveedor->categoria->nombre : '';
-        $proveedorNombre = $proveedor ? $proveedor->nombre : '';
 
         return response()->json([
             'found' => true,
@@ -49,15 +44,46 @@ class GestionesController extends Controller
                 'nombre' => $producto->nombre,
                 'codigo' => $producto->codigo,
                 'stock' => (int) $producto->stock,
-                // devolver precios correctos y numéricos
                 'precio_lista' => $producto->precio_lista !== null ? (float) $producto->precio_lista : null,
                 'precio_publico' => $producto->precio_publico !== null ? (float) $producto->precio_publico : null,
-                // mantener compatibilidad con el front
-                'categoria' => $categoria,
-                'proveedor_nombre' => $proveedorNombre,
-                'proveedor_categoria' => $categoria,
+                // Campos mantenidos para compatibilidad (ahora vacíos)
+                'categoria' => '',
+                'proveedor_nombre' => '',
+                'proveedor_categoria' => '',
             ]
         ]);
+    }
+
+    // Búsqueda de productos por nombre
+    public function buscarProductosPorNombre($nombre)
+    {
+        $nombre = urldecode($nombre);
+        $nombre = trim($nombre);
+
+        if (empty($nombre)) {
+            return response()->json(['productos' => []]);
+        }
+
+        $productos = Producto::whereRaw('LOWER(nombre) LIKE ?', ['%' . strtolower($nombre) . '%'])
+            ->select('producto_id', 'nombre', 'codigo', 'stock', 'precio_lista', 'precio_publico')
+            ->orderBy('nombre', 'asc')
+            ->limit(10)
+            ->get()
+            ->map(function ($producto) {
+                return [
+                    'id' => (int) $producto->producto_id,
+                    'nombre' => $producto->nombre,
+                    'codigo' => $producto->codigo,
+                    'stock' => (int) $producto->stock,
+                    'precio_lista' => $producto->precio_lista !== null ? (float) $producto->precio_lista : null,
+                    'precio_publico' => $producto->precio_publico !== null ? (float) $producto->precio_publico : null,
+                    'categoria' => '',
+                    'proveedor_nombre' => '',
+                    'proveedor_categoria' => '',
+                ];
+            });
+
+        return response()->json(['productos' => $productos]);
     }
 
     public function verificarCredencialesProduccion(Request $request)
@@ -101,9 +127,11 @@ class GestionesController extends Controller
         }
 
         // Verificar si hay productos de madera SOLO para salidas
+        // NOTA: Funcionalidad de madera deshabilitada ya que no hay categorías
         $codigosProductos = array_column($productos, 'codigo');
-        $productosConMadera = collect();
-        
+        $productosConMadera = collect(); // Siempre vacío ahora
+
+        /* Código anterior comentado:
         if ($tipo === 'Salida') {
             $productosConMadera = Producto::with(['proveedor.categoria'])
                 ->whereIn('codigo', $codigosProductos)
@@ -114,6 +142,7 @@ class GestionesController extends Controller
                            strtolower($producto->proveedor->categoria->nombre) === 'madera';
                 });
         }
+        */
 
         // Si hay productos de madera en una SALIDA y el usuario actual no es administrador
         $usuarioActual = User::find(Auth::id());
@@ -121,17 +150,19 @@ class GestionesController extends Controller
             // Verificar credenciales de producción
             if (!$request->auth_email || !$request->auth_password) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Se requiere autenticación de producción para gestionar productos de madera'
                 ], 400);
             }
 
             $userProduccion = User::where('email', $request->auth_email)->first();
-            if (!$userProduccion || 
+            if (
+                !$userProduccion ||
                 !Hash::check($request->auth_password, $userProduccion->password) ||
-                !$userProduccion->hasAnyRole(['Produccion', 'Administrador'])) {
+                !$userProduccion->hasAnyRole(['Produccion', 'Administrador'])
+            ) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Credenciales de producción incorrectas o sin permisos'
                 ], 401);
             }
@@ -178,7 +209,7 @@ class GestionesController extends Controller
                 $filesController = new FilesController();
                 $uploadResult = $filesController->subirArchivo($request, $gestion->gestion_inv_id);
                 $uploadData = $uploadResult->getData(true);
-                
+
                 if ($uploadData['success']) {
                     $gestion->update(['imagen_comprobante' => $uploadData['url']]);
                 } else {

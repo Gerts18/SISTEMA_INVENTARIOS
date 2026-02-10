@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 class Producto extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'productos';
     protected $primaryKey = 'producto_id';
     public $timestamps = true;
@@ -21,10 +21,9 @@ class Producto extends Model
         'stock',
         'precio_lista',
         'precio_publico',
-        'proveedor_id',
     ];
-    
- 
+
+
     protected static function newFactory()
     {
         return \Database\Factories\ProductoFactory::new();
@@ -32,15 +31,13 @@ class Producto extends Model
 
     public static $rules = [
         'nombre' => 'required|string|max:255',
-        'codigo' => 'required|string|max:6|unique:productos,codigo',
         'stock' => 'integer|min:0',
         'precio_lista' => 'required|numeric|min:0',
         'precio_publico' => 'required|numeric|min:0',
-        'proveedor_id' => 'required|exists:proveedores,proveedor_id',
     ];
 
     public static $rules_update = [
-        'stock' => 'required|integer|min:0', 
+        'stock' => 'required|integer|min:0',
     ];
 
     public function preciosHistorial()
@@ -53,9 +50,28 @@ class Producto extends Model
         return $this->hasMany(GestionInventario::class, 'producto_id', 'producto_id');
     }
 
-    public function proveedor()
+    // Relación comentada - proveedor removido
+    // public function proveedor()
+    // {
+    //     return $this->belongsTo(Proveedor::class, 'proveedor_id', 'proveedor_id');
+    // }
+
+    /**
+     * Generar el siguiente código incremental para productos
+     */
+    public static function generarCodigoIncremental(): string
     {
-        return $this->belongsTo(Proveedor::class, 'proveedor_id', 'proveedor_id');
+        $ultimoProducto = self::orderBy('producto_id', 'desc')->first();
+
+        if (!$ultimoProducto) {
+            return '000001';
+        }
+
+        // Obtener el código actual y convertirlo a entero
+        $ultimoCodigo = (int) $ultimoProducto->codigo;
+        $nuevoCodigo = $ultimoCodigo + 1;
+
+        // Formatear con ceros a la izquierda (6 dígitos)
+        return str_pad($nuevoCodigo, 6, '0', STR_PAD_LEFT);
     }
-    
 }

@@ -13,7 +13,6 @@ interface Producto {
     stock: number;
     precio_lista: number;
     precio_publico: number;
-    categoria_id: string | number;
 }
 
 interface EditProductFormProps {
@@ -37,12 +36,42 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Validar que el precio no exceda el límite de la base de datos (DECIMAL 10,2)
+    const MAX_PRICE = 99999999.99;
+
+    const validatePrice = (price: number, fieldName: string): string | null => {
+        if (isNaN(price)) {
+            return `${fieldName} debe ser un número válido.`;
+        }
+        if (price < 0) {
+            return `${fieldName} no puede ser negativo.`;
+        }
+        if (price > MAX_PRICE) {
+            return `${fieldName} no puede exceder $${MAX_PRICE.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        }
+        return null;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
 
         try {
+            // Validar precios
+            const errorPrecioLista = validatePrice(formData.precio_lista, 'Precio de Lista');
+            if (errorPrecioLista) {
+                setError(errorPrecioLista);
+                setIsLoading(false);
+                return;
+            }
+
+            const errorPrecioPublico = validatePrice(formData.precio_publico, 'Precio Público');
+            if (errorPrecioPublico) {
+                setError(errorPrecioPublico);
+                setIsLoading(false);
+                return;
+            }
             const response = await axios.patch(`/inventario/productos/${producto.producto_id}`, formData);
 
             if (response.data.success) {
@@ -120,10 +149,14 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
                             type="number"
                             step="0.01"
                             min="0"
+                            max="99999999.99"
                             value={formData.precio_lista}
                             onChange={(e) => handleInputChange('precio_lista', parseFloat(e.target.value) || 0)}
                             required
                         />
+                        <span className="text-xs text-muted-foreground">
+                            Máx: $99,999,999.99
+                        </span>
                     </div>
 
                     <div>
@@ -133,10 +166,14 @@ export const EditProductForm: React.FC<EditProductFormProps> = ({
                             type="number"
                             step="0.01"
                             min="0"
+                            max="99999999.99"
                             value={formData.precio_publico}
                             onChange={(e) => handleInputChange('precio_publico', parseFloat(e.target.value) || 0)}
                             required
                         />
+                        <span className="text-xs text-muted-foreground">
+                            Máx: $99,999,999.99
+                        </span>
                     </div>
                 </div>
 

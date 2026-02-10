@@ -3,106 +3,108 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SearchableSelect } from '@/components/ui/searchable-select';
-import { router } from '@inertiajs/react';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import { CirclePlus } from 'lucide-react';
 import React, { useState } from 'react';
-
-interface Proveedor {
-    proveedor_id: string;
-    nombre: string;
-}
+import axios from 'axios';
 
 interface AddProductModalProps {
-    proveedores: Proveedor[];
-    selectedCategoryId: string;
     onSuccess: () => void;
     onProductCreated: () => void;
 }
 
 interface ProductFormData {
-    proveedor_id: string;
     nombre: string;
-    codigo: string;
-    stock: number;
     precio_lista: string;
     precio_publico: string;
-    categoria_id: string;
 }
 
-export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, selectedCategoryId, onSuccess, onProductCreated }) => {
+export const AddProductModal: React.FC<AddProductModalProps> = ({ onSuccess, onProductCreated }) => {
     const [open, setOpen] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState<ProductFormData>({
-        proveedor_id: '',
         nombre: '',
-        codigo: '',
-        stock: 0,
         precio_lista: '',
         precio_publico: '',
-        categoria_id: selectedCategoryId,
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    // Validar que el precio no exceda el límite de la base de datos (DECIMAL 10,2)
+    const MAX_PRICE = 99999999.99;
 
-        const payload = {
-            ...formData,
-            categoria_id: parseInt(formData.categoria_id),
-            stock: Number(formData.stock),
-            precio_lista: parseFloat(formData.precio_lista),
-            precio_publico: parseFloat(formData.precio_publico),
-        };
-
-        try {
-            if (!payload.nombre || !payload.codigo || !payload.proveedor_id || !payload.precio_lista || !payload.precio_publico) {
-                setFormError('Todos los campos son obligatorios.');
-                return;
-            }
-        } catch (error) {
-            setFormError('Error de validación. Por favor, revisa los datos ingresados.');
-            return;
+    const validatePrice = (price: string, fieldName: string): string | null => {
+        const numPrice = parseFloat(price);
+        if (isNaN(numPrice)) {
+            return `${fieldName} debe ser un número válido.`;
         }
+        if (numPrice < 0) {
+            return `${fieldName} no puede ser negativo.`;
+        }
+        if (numPrice > MAX_PRICE) {
+            return `${fieldName} no puede exceder $${MAX_PRICE.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+        }
+        return null;
+    };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
         setFormError(null);
 
-        router.post(route('inventario.store'), payload, {
-            onError: (errors) => {
-                console.error('Errores de validación:', errors);
-                let errorMessage = '';
-                if (typeof errors === 'object' && !Array.isArray(errors)) {
-                    errorMessage = Object.values(errors).join(', ');
-                } else {
-                    errorMessage = String(errors);
-                }
-                setFormError(` ${errorMessage}`);
-            },
-            onSuccess: () => {
-                console.log('Producto creado exitosamente');
+        try {
+            if (!formData.nombre || !formData.precio_lista || !formData.precio_publico) {
+                setFormError('El nombre y los precios son obligatorios.');
+                setIsSubmitting(false);
+                return;
+            }
+
+            // Validar precios
+            const errorPrecioLista = validatePrice(formData.precio_lista, 'Precio de Lista');
+            if (errorPrecioLista) {
+                setFormError(errorPrecioLista);
+                setIsSubmitting(false);
+                return;
+            }
+
+            const errorPrecioPublico = validatePrice(formData.precio_publico, 'Precio Público');
+            if (errorPrecioPublico) {
+                setFormError(errorPrecioPublico);
+                setIsSubmitting(false);
+                return;
+            }
+
+            const payload = {
+                nombre: formData.nombre,
+                stock: 0,
+                precio_lista: parseFloat(formData.precio_lista),
+                precio_publico: parseFloat(formData.precio_publico),
+            };
+
+            const response = await axios.post('/inventario/create', payload);
+
+            if (response.data.success) {
                 setOpen(false);
                 onSuccess();
                 onProductCreated();
 
-
+                // Resetear formulario
                 setFormData({
-                    proveedor_id: '',
                     nombre: '',
-                    codigo: '',
-                    stock: 0,
                     precio_lista: '',
                     precio_publico: '',
-                    categoria_id: selectedCategoryId,
                 });
                 setFormError(null);
-            },
-        });
+            }
+        } catch (error: any) {
+            console.error('Error al crear producto:', error);
+            const errorMessage = error.response?.data?.message ||
+                Object.values(error.response?.data?.errors || {}).join(', ') ||
+                'Error al crear el producto.';
+            setFormError(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
-
-    // Actualizar categoria_id cuando selectedCategoryId cambie
-    React.useEffect(() => {
-        setFormData((prev) => ({ ...prev, categoria_id: selectedCategoryId }));
-    }, [selectedCategoryId]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -116,7 +118,9 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Agregar nuevo producto</DialogTitle>
-                    <DialogDescription>Complete los campos del formulario para registrar un nuevo producto.</DialogDescription>
+                    <DialogDescription>
+                        Complete los campos del formulario. El código se generará automáticamente.
+                    </DialogDescription>
                 </DialogHeader>
 
                 {formError && (
@@ -128,69 +132,66 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({ proveedores, s
 
                 <form className="space-y-4" onSubmit={handleSubmit} autoComplete="off">
                     <div>
-                        <Label htmlFor="proveedor_id">Proveedor</Label>
-                        <SearchableSelect
-                            options={proveedores.map((prov) => ({
-                                value: prov.proveedor_id,
-                                label: prov.nombre,
-                            }))}
-                            value={formData.proveedor_id}
-                            onChange={(value) => setFormData({ ...formData, proveedor_id: value })}
-                            placeholder="Seleccione un proveedor"
+                        <Label htmlFor="nombre">Nombre del Producto *</Label>
+                        <Input
+                            id="nombre"
+                            value={formData.nombre}
+                            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                            placeholder="Ej: Cemento gris 50kg"
+                            required
                         />
                     </div>
 
                     <div className="flex gap-4">
                         <div className="flex-1">
-                            <Label htmlFor="nombre">Nombre</Label>
-                            <Input id="nombre" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} />
-                        </div>
-                        <div className="flex-1">
-                            <Label htmlFor="codigo">Código</Label>
-                            <Input
-                                id="codigo"
-                                value={formData.codigo}
-                                maxLength={6}
-                                inputMode="numeric"
-                                onChange={(e) => {
-                                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                                    setFormData({ ...formData, codigo: value });
-                                }}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                        <div className="flex-1">
-                            <Label htmlFor="precio_lista">Precio de Lista</Label>
+                            <Label htmlFor="precio_lista">Precio de Lista *</Label>
                             <Input
                                 id="precio_lista"
                                 type="number"
                                 step="0.01"
+                                min="0"
+                                max="99999999.99"
                                 value={formData.precio_lista}
                                 onChange={(e) => setFormData({ ...formData, precio_lista: e.target.value })}
+                                placeholder="0.00"
+                                required
                             />
+                            <span className="text-xs text-muted-foreground">
+                                Máximo: $99,999,999.99
+                            </span>
                         </div>
                         <div className="flex-1">
-                            <Label htmlFor="precio_publico">Precio Público</Label>
+                            <Label htmlFor="precio_publico">Precio Público *</Label>
                             <Input
                                 id="precio_publico"
                                 type="number"
                                 step="0.01"
+                                min="0"
+                                max="99999999.99"
                                 value={formData.precio_publico}
                                 onChange={(e) => setFormData({ ...formData, precio_publico: e.target.value })}
+                                placeholder="0.00"
+                                required
                             />
+                            <span className="text-xs text-muted-foreground">
+                                Máximo: $99,999,999.99
+                            </span>
                         </div>
                     </div>
 
-                    <div className="flex gap-4">
-                        <div className="flex flex-1 flex-col">
-                            <Label htmlFor="stock">Cantidad</Label>
-                            <Label className="mt-3 ml-10">0</Label>
-                        </div>
+                    <div className="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                            disabled={isSubmitting}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Guardando...' : 'Guardar Producto'}
+                        </Button>
                     </div>
-
-                    <Button type="submit">Guardar</Button>
                 </form>
             </DialogContent>
         </Dialog>
