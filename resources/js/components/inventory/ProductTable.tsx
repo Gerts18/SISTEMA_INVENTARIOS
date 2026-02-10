@@ -16,7 +16,6 @@ interface Producto {
     stock: number;
     precio_lista: number;
     precio_publico: number;
-    categoria_id: string | number;
 }
 
 interface ProductTableProps {

@@ -31,7 +31,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     const [authEmail, setAuthEmail] = useState("")
     const [authPassword, setAuthPassword] = useState("")
     const [requiereAuth, setRequiereAuth] = useState(false)
-    
+
     const { props } = usePage()
     const userRoles = (props.auth as any)?.user?.roles || []
     const esAdministrador = userRoles.some((role: any) => role.name === 'Administrador')
@@ -42,15 +42,11 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
         setSelectedFile(null)
     }, [tipo])
 
-    // Agrupa productos por categoría (ahora usando proveedor.categoria)
+    // Agrupar productos (sin categorías ahora)
     const productosPorCategoria = useMemo(() => {
         const grupos: { [categoria: string]: any[] } = {};
-        lista.forEach(prod => {
-            // Obtener la categoría desde el proveedor
-            const categoria = prod.proveedor_categoria || prod.categoria || "Sin categoría";
-            if (!grupos[categoria]) grupos[categoria] = [];
-            grupos[categoria].push(prod);
-        });
+        // Agrupar todos en una sola categoría "Productos"
+        grupos["Productos"] = lista;
         return grupos;
     }, [lista]);
 
@@ -92,10 +88,10 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     // Validar antes de abrir el diálogo
     const handleContinuarClick = () => {
         if (!selectedFile) {
-            setAlerta({ 
-                visible: true, 
-                mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
-                tipo: "warning" 
+            setAlerta({
+                visible: true,
+                mensaje: "Debes seleccionar un archivo comprobante antes de continuar.",
+                tipo: "warning"
             })
 
             return false
@@ -105,13 +101,9 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     }
 
     // Verificar si hay productos de madera SOLO para salidas
+    // NOTA: Funcionalidad deshabilitada - no hay categorías
     const tieneProductosMadera = useMemo(() => {
-        if (tipo !== "Salida") return false;
-        
-        return lista.some(prod => 
-            prod.proveedor_categoria && 
-            prod.proveedor_categoria.toLowerCase() === 'madera'
-        )
+        return false; // Siempre false ahora
     }, [lista, tipo])
 
     // Determinar si requiere autenticación
@@ -127,7 +119,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     const handleRegistrar = async () => {
         setLoading(true)
         setAlerta({ visible: false, mensaje: "", tipo: "success" })
-        
+
         try {
             // Crear FormData para enviar archivo junto con datos
             const formData = new FormData()
@@ -151,33 +143,33 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
             })
 
             if (res.data.success) {
-                setAlerta({ 
-                    visible: true, 
-                    mensaje: "¡Gestión registrada exitosamente! El comprobante ha sido guardado correctamente.", 
-                    tipo: "success" 
+                setAlerta({
+                    visible: true,
+                    mensaje: "¡Gestión registrada exitosamente! El comprobante ha sido guardado correctamente.",
+                    tipo: "success"
                 })
                 setLista([])
                 setSelectedFile(null)
                 setAuthEmail("")
                 setAuthPassword("")
-                
+
                 // Auto-hide success message after 5 seconds
                 setTimeout(() => {
                     setAlerta({ visible: false, mensaje: "", tipo: "success" })
                 }, 5000)
             } else {
-                setAlerta({ 
-                    visible: true, 
-                    mensaje: res.data.message || "Error al registrar gestión", 
-                    tipo: "error" 
+                setAlerta({
+                    visible: true,
+                    mensaje: res.data.message || "Error al registrar gestión",
+                    tipo: "error"
                 })
             }
         } catch (e: any) {
             const errorMessage = e.response?.data?.message || e.message || "Error inesperado al procesar la solicitud"
-            setAlerta({ 
-                visible: true, 
-                mensaje: `Error: ${errorMessage}`, 
-                tipo: "error" 
+            setAlerta({
+                visible: true,
+                mensaje: `Error: ${errorMessage}`,
+                tipo: "error"
             })
         } finally {
             setLoading(false)
@@ -188,23 +180,24 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
     return (
         <section className="mx-auto p-6 space-y-6 border-4 rounded-2xl min-h-screen my-6">
             <h1
-                className={`text-2xl font-bold mb-6 ${
-                    tipo === "Salida" ? "text-red-700" : "text-green-700"
-                }`}
+                className={`text-2xl font-bold mb-6 ${tipo === "Salida" ? "text-red-700" : "text-green-700"
+                    }`}
             >
                 {titulo}
             </h1>
 
             <ConsultaExistencia onAgregar={handleAgregar} lista={lista} tipo={tipo} />
 
-            <div className="mt-8">
-                <TablaProductos
-                    productosPorCategoria={productosPorCategoria}
-                    onCantidadEntrada={handleCantidadEntrada}
-                    onEliminar={handleEliminar}
-                    tipo={tipo}
-                />
-            </div>
+            {lista.length > 0 && (
+                <div className="mt-8">
+                    <TablaProductos
+                        productosPorCategoria={productosPorCategoria}
+                        onCantidadEntrada={handleCantidadEntrada}
+                        onEliminar={handleEliminar}
+                        tipo={tipo}
+                    />
+                </div>
+            )}
 
             {/* Componente de carga de archivo */}
             {lista.length > 0 && (
@@ -239,14 +232,14 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
             {/* Botón continuar y alerta */}
             {lista.length > 0 && (
                 <div className="flex flex-col items-end mt-6 gap-2">
-                    <AlertDialog 
-                        open={openDialog} 
+                    <AlertDialog
+                        open={openDialog}
                         onOpenChange={(open) => {
                             if (open && !selectedFile) {
-                                setAlerta({ 
-                                    visible: true, 
-                                    mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
-                                    tipo: "warning" 
+                                setAlerta({
+                                    visible: true,
+                                    mensaje: "Debes seleccionar un archivo comprobante antes de continuar.",
+                                    tipo: "warning"
                                 })
                                 return
                             }
@@ -263,10 +256,10 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                 onClick={(e) => {
                                     if (!selectedFile) {
                                         e.preventDefault()
-                                        setAlerta({ 
-                                            visible: true, 
-                                            mensaje: "Debes seleccionar un archivo comprobante antes de continuar.", 
-                                            tipo: "warning" 
+                                        setAlerta({
+                                            visible: true,
+                                            mensaje: "Debes seleccionar un archivo comprobante antes de continuar.",
+                                            tipo: "warning"
                                         })
                                         return
                                     }
@@ -288,7 +281,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                     )}
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
-                            
+
                             {/* Campos de autenticación para productos de madera */}
                             {requiereAuth && (
                                 <div className="space-y-4 py-4">
@@ -298,7 +291,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                             Esta gestión incluye productos de madera. Se requiere autenticación de un usuario con rol de producción.
                                         </AlertDescription>
                                     </Alert>
-                                    
+
                                     <div className="space-y-2">
                                         <Label htmlFor="auth-email">Correo electrónico</Label>
                                         <Input
@@ -310,7 +303,7 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
                                             disabled={loading}
                                         />
                                     </div>
-                                    
+
                                     <div className="space-y-2">
                                         <Label htmlFor="auth-password">Contraseña</Label>
                                         <Input

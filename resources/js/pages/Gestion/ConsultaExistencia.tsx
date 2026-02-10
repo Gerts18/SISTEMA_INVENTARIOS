@@ -17,22 +17,60 @@ interface ConsultaExistenciaProps {
 }
 
 const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExistenciaProps) => {
-    const [productNumber, setProductNumber] = useState("")
+    const [searchTerm, setSearchTerm] = useState("")
     const [producto, setProducto] = useState<Producto | undefined>(undefined)
+    const [sugerencias, setSugerencias] = useState<Producto[]>([])
     const [buscado, setBuscado] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [showSugerencias, setShowSugerencias] = useState(false)
 
+    // Buscar sugerencias mientras se escribe
+    const handleSearchChange = async (value: string) => {
+        setSearchTerm(value)
+        setBuscado(false)
+        setProducto(undefined)
+
+        if (value.trim().length < 1) {
+            setSugerencias([])
+            setShowSugerencias(false)
+            return
+        }
+
+        try {
+            const res = await axios.get(`/gestion/buscar-productos/${encodeURIComponent(value)}`)
+            setSugerencias(res.data.productos || [])
+            setShowSugerencias(true)
+        } catch (err) {
+            setSugerencias([])
+        }
+    }
+
+    // Seleccionar un producto de las sugerencias
+    const handleSelectSugerencia = (prod: Producto) => {
+        setProducto(prod)
+        setSearchTerm(prod.nombre)
+        setSugerencias([])
+        setShowSugerencias(false)
+        setBuscado(true)
+    }
+
+    // Buscar producto
     const handleConsultar = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         setLoading(true)
         setBuscado(false)
         setProducto(undefined)
+        setShowSugerencias(false)
+
         try {
-            const res = await axios.get(`/gestion/producto-existencia/${encodeURIComponent(productNumber)}`)
+            // Primero intentar buscar por nombre
+            const res = await axios.get(`/gestion/buscar-productos/${encodeURIComponent(searchTerm)}`)
             const data = res.data
             setBuscado(true)
-            if (data.found) {
-                setProducto(data.producto)
+
+            if (data.productos && data.productos.length > 0) {
+                // Si hay resultados, mostrar el primero
+                setProducto(data.productos[0])
             } else {
                 setProducto(undefined)
             }
@@ -49,33 +87,56 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
         if (producto) {
             onAgregar(producto)
             setProducto(undefined)
-            setProductNumber("")
+            setSearchTerm("")
             setBuscado(false)
+            setSugerencias([])
         }
     }
 
     return (
         <Card>
             <CardHeader>
-                <CardTitle>EXISTENCIA</CardTitle>
+                <CardTitle>BUSCAR PRODUCTO</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex flex-col gap-4 items-stretch sm:flex-row sm:items-end">
-                    <div className="space-y-2">
-                        <Label htmlFor="product-number">Numero de Producto</Label>
+                    <div className="space-y-2 flex-1 relative">
+                        <Label htmlFor="product-search">Nombre del Producto</Label>
                         <Input
-                            id="product-number"
-                            value={productNumber}
-                            onChange={(e) => setProductNumber(e.target.value)}
-                            className="w-full sm:w-32"
+                            id="product-search"
+                            value={searchTerm}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            onFocus={() => sugerencias.length > 0 && setShowSugerencias(true)}
+                            onBlur={() => setTimeout(() => setShowSugerencias(false), 200)}
+                            placeholder="Ej: Cemento, Varilla, etc."
+                            className="w-full"
+                            maxLength={100}
                         />
+
+                        {/* Lista de sugerencias */}
+                        {showSugerencias && sugerencias.length > 0 && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                {sugerencias.map((sug) => (
+                                    <div
+                                        key={sug.codigo}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                                        onClick={() => handleSelectSugerencia(sug)}
+                                    >
+                                        <div className="font-medium">{sug.nombre}</div>
+                                        <div className="text-sm text-gray-500">
+                                            Código: {sug.codigo} | Stock: {sug.stock}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <Button 
-                        onClick={handleConsultar} 
-                        disabled={loading || !productNumber || productNumber.length > 6}
+                    <Button
+                        onClick={handleConsultar}
+                        disabled={loading || !searchTerm || searchTerm.length < 1}
                         className="w-full sm:w-auto"
                     >
-                        {loading ? "Consultando..." : "Consultar Existencia"}
+                        {loading ? "Consultando..." : "Buscar"}
                     </Button>
                 </div>
 
@@ -99,10 +160,6 @@ const ConsultaExistencia = ({ onAgregar, lista, tipo = "Entrada" }: ConsultaExis
                                             <div>
                                                 <div className="font-medium">Cantidad disponible</div>
                                                 <div>{producto.stock} piezas</div>
-                                            </div>
-                                            <div>
-                                                <div className="font-medium">Categoria</div>
-                                                <div>{(producto as any).categoria}</div>
                                             </div>
                                             {/* Nuevos: Precios */}
                                             <div>

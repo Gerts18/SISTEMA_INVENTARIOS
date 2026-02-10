@@ -9,6 +9,17 @@ use Carbon\Carbon;
 class ProductoObserver
 {
     /**
+     * Handle the Producto "creating" event (antes de crear).
+     */
+    public function creating(Producto $producto): void
+    {
+        // Generar código automáticamente si no existe
+        if (empty($producto->codigo)) {
+            $producto->codigo = Producto::generarCodigoIncremental();
+        }
+    }
+
+    /**
      * Handle the Producto "created" event.
      */
     public function created(Producto $producto): void
@@ -25,13 +36,13 @@ class ProductoObserver
         // Verificar si alguno de los precios cambió
         $precioListaCambio = $producto->isDirty('precio_lista');
         $precioPublicoCambio = $producto->isDirty('precio_publico');
-        
+
         if ($precioListaCambio || $precioPublicoCambio) {
             // Crear un registro con ambos precios actuales
             $this->crearRegistroHistorial(
-                $producto, 
-                $producto->precio_lista, 
-                $producto->precio_publico, 
+                $producto,
+                $producto->precio_lista,
+                $producto->precio_publico,
                 'actualizacion'
             );
         }

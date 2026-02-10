@@ -55,7 +55,6 @@ const TablaProductos = ({
                   {/* Reemplazo: dos columnas de precio */}
                   <th className="px-2 py-1 border hidden md:table-cell">Precio Lista</th>
                   <th className="px-2 py-1 border hidden md:table-cell">Precio Público</th>
-                  <th className="px-2 py-1 border">Proveedor</th>
                   <th className="px-2 py-1 border">{columnaCantidad}</th>
                   <th className="px-2 py-1 border"></th>
                 </tr>
@@ -77,7 +76,6 @@ const TablaProductos = ({
                         ? `$${(prod as any).precio_publico}`
                         : '-'}
                     </td>
-                    <td className="px-2 py-1 border">{(prod as any).proveedor_nombre ?? '-'}</td>
                     <td className="px-2 py-1 border">
                       <div className="flex items-center gap-1">
                         <Button
@@ -121,7 +119,7 @@ const TablaProductos = ({
                 ))}
               </tbody>
             </table>
-          </div> 
+          </div>
           {/* Mobile cards */}
           <div className="sm:hidden mt-4 space-y-3">
             {productos.map(prod => (
@@ -143,9 +141,6 @@ const TablaProductos = ({
                     {(prod as any)?.precio_publico !== undefined && (prod as any)?.precio_publico !== null
                       ? `$${(prod as any).precio_publico}`
                       : '-'}
-                  </div>
-                  <div>
-                    <span className="font-medium">Proveedor:</span> {(prod as any).proveedor_nombre ?? '-'}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
