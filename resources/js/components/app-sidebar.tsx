@@ -1,10 +1,10 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem} from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Archive, BookOpen, House, Package, Truck, Clipboard, ShoppingBasketIcon } from 'lucide-react';
+import { Archive, BookOpen, House, Package, Truck, Clipboard, ShoppingBasketIcon, SendHorizontal } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -51,7 +51,13 @@ const mainNavItems: NavItem[] = [
         icon: ShoppingBasketIcon,
         permissions: 'role:Administrador|Diseño|Bodega',
     },
-    
+    {
+        title: 'Entregas',
+        href: '/entregas',
+        icon: SendHorizontal,
+        permissions: 'role:Administrador|Produccion|Barniz|Chofer',
+    },
+
 ];
 
 /* const footerNavItems: NavItem[] = [

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -212,14 +213,15 @@ const CatalogoInventario = () => {
                     {/* Filtro de ordenamiento */}
                     <div className="flex items-center gap-2">
                         <Label className="text-sm">Ordenar:</Label>
-                        <select
-                            value={sortOrder}
-                            onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                            className="border rounded px-3 py-1 text-sm"
-                        >
-                            <option value="desc">Más recientes primero</option>
-                            <option value="asc">Más antiguos primero</option>
-                        </select>
+                        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'asc' | 'desc')}>
+                            <SelectTrigger className="w-52">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="desc">Más recientes primero</SelectItem>
+                                <SelectItem value="asc">Más antiguos primero</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 max-w-2xl">

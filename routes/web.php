@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Autorizaciones\AutorizacionesController;
+use App\Http\Controllers\Entregas\EntregasController;
 use App\Http\Controllers\Files\FilesController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +106,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [AutorizacionesController::class, 'show'])->name('autorizaciones');
         Route::post('/create', [AutorizacionesController::class, 'store'])->name('autorizaciones.store');
         Route::patch('/{autorizacion}/status', [AutorizacionesController::class, 'updateStatus'])->name('autorizaciones.updateStatus');
+    });
+
+    //Entregas de material
+    Route::group(['prefix' => 'entregas', 'middleware' => ['role:Administrador|Produccion|Barniz|Chofer']], function () {
+        Route::get('/', [EntregasController::class, 'show'])->name('entregas');
+        Route::get('/obras', [EntregasController::class, 'getObras'])->name('entregas.obras');
+        Route::get('/usuarios', [EntregasController::class, 'getUsuarios'])->name('entregas.usuarios');
+        Route::post('/create', [EntregasController::class, 'store'])->name('entregas.store');
+        Route::get('/{entregaId}/detalle', [EntregasController::class, 'getDetalle'])->name('entregas.detalle');
+        Route::patch('/transicion/{transicionId}/estado', [EntregasController::class, 'updateEstado'])->name('entregas.updateEstado');
+        Route::post('/{entregaId}/enviar', [EntregasController::class, 'enviar'])->name('entregas.enviar');
+        Route::post('/{entregaId}/devolver', [EntregasController::class, 'devolver'])->name('entregas.devolver');
+        Route::post('/{entregaId}/completar', [EntregasController::class, 'completar'])->name('entregas.completar');
     });
 });
 

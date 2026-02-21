@@ -22,5 +22,6 @@ class RolesAndPermissionsSeeder extends Seeder
         Role::firstOrCreate(['name' => 'Barniz']);
         Role::firstOrCreate(['name' => 'Checador']);
         Role::firstOrCreate(['name' => 'Contador']);
+        Role::firstOrCreate(['name' => 'Chofer']);
     }
 }
