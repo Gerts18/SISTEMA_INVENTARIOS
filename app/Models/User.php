@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Autorizacion\Autorizaciones;
+use App\Models\Entregas\Entrega;
 use App\Models\Gestion\GestionInventario;
 use App\Models\Reportes\Reporte;
 use App\Models\Solicitudes\SolicitudMaterial;
@@ -73,5 +74,10 @@ class User extends Authenticatable
     public function autorizaciones()
     {
         return $this->hasMany(Autorizaciones::class, 'usuario_id', 'id');
+    }
+
+    public function entregasCreadas()
+    {
+        return $this->hasMany(Entrega::class, 'creador_id', 'id');
     }
 }
