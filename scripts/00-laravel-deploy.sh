@@ -11,4 +11,10 @@ php artisan route:cache
 echo "Running migrations..."
 php artisan migrate --force
 
+echo "Seeding roles..."
+php artisan db:seed --class=RolesAndPermissionsSeeder --force
+
+echo "Clearing permission cache..."
+php artisan permission:cache-reset
+
 echo "Deploy complete."
