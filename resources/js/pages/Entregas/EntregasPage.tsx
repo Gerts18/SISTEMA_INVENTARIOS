@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { CalendarIcon, EyeIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import type { Entrega, EntregasPageProps } from '@/types/entregas';
 import type { PageProps } from '@/types/auth';
+import { useEntregasChannel } from '@/hooks/use-entregas-channel';
 
 const EntregasPage = ({ entregas, filters, userRole }: EntregasPageProps) => {
     const page = usePage<PageProps>();
@@ -24,6 +25,9 @@ const EntregasPage = ({ entregas, filters, userRole }: EntregasPageProps) => {
     const [statusFilter, setStatusFilter] = useState(filters.status || 'todas');
 
     const canCreate = userRole === 'Produccion' || userRole === 'Administrador';
+
+    // Tiempo real: escuchar eventos de entregas via WebSocket
+    useEntregasChannel(currentUserId);
 
     // Debounce para búsqueda
     useEffect(() => {

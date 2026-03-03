@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Entregas;
 
+use App\Events\EntregaActualizadaEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Entregas\Entrega;
 use App\Models\Entregas\EntregaTransicion;
@@ -183,6 +184,22 @@ class EntregasController extends Controller
 
             DB::commit();
 
+            // Notificar al destinatario (nueva entrega entrante)
+            event(new EntregaActualizadaEvent(
+                targetUserId: $request->destinatario_id,
+                entregaId: $entrega->entrega_id,
+                tipo: 'nueva',
+            ));
+
+            // Notificar al creador (para que su lista se actualice también)
+            if ($request->destinatario_id !== $user->id) {
+                event(new EntregaActualizadaEvent(
+                    targetUserId: $user->id,
+                    entregaId: $entrega->entrega_id,
+                    tipo: 'nueva',
+                ));
+            }
+
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -279,6 +296,12 @@ class EntregasController extends Controller
 
             $transicion->update(['estado' => $request->estado]);
 
+            event(new EntregaActualizadaEvent(
+                targetUserId: $transicion->remitente_id,
+                entregaId: $transicion->entrega_id,
+                tipo: 'estado',
+            ));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Estado actualizado correctamente.',
@@ -336,6 +359,22 @@ class EntregasController extends Controller
             ]);
 
             DB::commit();
+
+            // Notificar al nuevo destinatario
+            event(new EntregaActualizadaEvent(
+                targetUserId: $request->destinatario_id,
+                entregaId: $entrega->entrega_id,
+                tipo: 'enviada',
+            ));
+
+            // Notificar al remitente (su tarjeta cambia de destinatario)
+            if ($request->destinatario_id !== $user->id) {
+                event(new EntregaActualizadaEvent(
+                    targetUserId: $user->id,
+                    entregaId: $entrega->entrega_id,
+                    tipo: 'enviada',
+                ));
+            }
 
             return response()->json([
                 'success' => true,
@@ -399,6 +438,12 @@ class EntregasController extends Controller
 
             DB::commit();
 
+            event(new EntregaActualizadaEvent(
+                targetUserId: $transicionActual->remitente_id,
+                entregaId: $entrega->entrega_id,
+                tipo: 'devuelta',
+            ));
+
             return response()->json([
                 'success' => true,
                 'message' => 'Entrega devuelta correctamente.',
@@ -450,6 +495,12 @@ class EntregasController extends Controller
             $entrega->update(['estado_general' => 'completado']);
 
             DB::commit();
+
+            event(new EntregaActualizadaEvent(
+                targetUserId: $entrega->creador_id,
+                entregaId: $entrega->entrega_id,
+                tipo: 'completada',
+            ));
 
             return response()->json([
                 'success' => true,

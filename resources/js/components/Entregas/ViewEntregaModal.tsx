@@ -281,9 +281,15 @@ export const ViewEntregaModal: React.FC<ViewEntregaModalProps> = ({
                                 </Badge>
                             </div>
 
-                            {entrega.descripcion && (
-                                <p className="text-sm text-muted-foreground">{entrega.descripcion}</p>
-                            )}
+                            {(() => {
+                                const desc = detalleEntrega?.descripcion ?? entrega.descripcion;
+                                return desc ? (
+                                    <div className="rounded-lg border bg-muted/40 p-3">
+                                        <p className="text-xs font-medium text-muted-foreground mb-1">Descripción</p>
+                                        <p className="text-sm">{desc}</p>
+                                    </div>
+                                ) : null;
+                            })()}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                 <div className="flex items-center gap-2">
