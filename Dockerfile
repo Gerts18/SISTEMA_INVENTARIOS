@@ -1,8 +1,5 @@
 FROM richarvey/nginx-php-fpm:latest
 
-# Install Node.js 20 for building frontend assets at container startup
-RUN apk add --no-cache nodejs npm
-
 COPY . .
 
 # Image config
