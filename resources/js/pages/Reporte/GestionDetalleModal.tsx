@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ExternalLink, FileText, Image as ImageIcon } from "lucide-react"
 
 import { Gestion } from "@/types/gestion"
+import { trackFileClick } from "@/lib/telemetry"
 
 
 type Props = {
@@ -65,7 +66,7 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                 <div className="space-y-3">
                                     <div className="border rounded-lg overflow-hidden">
                                         <img 
-                                            src={gestion.imagen_comprobante} 
+                                            src={gestion.imagen_comprobante_thumb || gestion.imagen_comprobante} 
                                             alt="Comprobante" 
                                             className="w-full max-h-64 object-contain bg-gray-50"
                                             onError={(e) => {
@@ -82,7 +83,10 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                     <Button 
                                         variant="outline" 
                                         className="w-full"
-                                        onClick={() => window.open(gestion.imagen_comprobante, '_blank')}
+                                        onClick={() => {
+                                            trackFileClick('gestion', gestion.gestion_inv_id);
+                                            window.open(gestion.imagen_comprobante, '_blank');
+                                        }}
                                     >
                                         <ExternalLink className="h-4 w-4 mr-2" />
                                         Ver imagen en tamaño completo
@@ -99,7 +103,10 @@ const GestionDetalleModal = ({ gestion, onClose }: Props) => {
                                     <Button 
                                         variant="outline" 
                                         className="w-full"
-                                        onClick={() => window.open(gestion.imagen_comprobante, '_blank')}
+                                        onClick={() => {
+                                            trackFileClick('gestion', gestion.gestion_inv_id);
+                                            window.open(gestion.imagen_comprobante, '_blank');
+                                        }}
                                     >
                                         <ExternalLink className="h-4 w-4 mr-2" />
                                         Abrir archivo

@@ -17,6 +17,8 @@ export interface Gestion  {
     fecha: string
     cambios_producto: CambioProducto[]
     imagen_comprobante?: string
+    imagen_comprobante_thumb?: string
+    clics_count?: number
     created_at: string
 }
 

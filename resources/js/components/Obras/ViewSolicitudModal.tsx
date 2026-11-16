@@ -1,8 +1,9 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CalendarIcon, UserIcon, FileTextIcon, DownloadIcon, Loader2 } from "lucide-react"
+import { CalendarIcon, UserIcon, FileTextIcon, DownloadIcon, ExternalLinkIcon, Loader2 } from "lucide-react"
 import { useState } from "react"
+import { trackFileClick } from "@/lib/telemetry"
 
 interface Solicitud {
     solicitud_id: number;
@@ -43,8 +44,14 @@ export function ViewSolicitudModal({ solicitud, isOpen, onClose }: ViewSolicitud
         });
     };
 
+    const handleOpenPDF = (url: string, solicitudId: number) => {
+        trackFileClick('solicitud', solicitudId);
+        window.open(url, '_blank');
+    };
+
     const handleDownloadPDF = async (url: string, solicitudId: number) => {
         if (!url) return;
+        trackFileClick('solicitud', solicitudId);
         
         try {
             setPdfLoading(true);
@@ -67,7 +74,7 @@ export function ViewSolicitudModal({ solicitud, isOpen, onClose }: ViewSolicitud
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Solicitud de Material #{solicitud.solicitud_id}</DialogTitle>
                     <DialogDescription>
@@ -105,31 +112,42 @@ export function ViewSolicitudModal({ solicitud, isOpen, onClose }: ViewSolicitud
                         </div>
                     </div>
 
-                    {/* PDF Section */}
+                    {/* PDF Section (Optimizado bajo demanda) */}
                     {solicitud.reporte_generado_url ? (
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium">Documento PDF</h3>
+                        <div className="p-5 border rounded-xl bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-3 bg-red-100 rounded-lg text-red-600">
+                                    <FileTextIcon className="h-8 w-8" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-gray-900 text-sm">Documento de Solicitud #{solicitud.solicitud_id}</h4>
+                                    <p className="text-xs text-gray-500">Archivo PDF generado en formato oficial</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => handleOpenPDF(solicitud.reporte_generado_url!, solicitud.solicitud_id)}
+                                    size="sm"
+                                    className="flex-1 sm:flex-none"
+                                >
+                                    <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                                    Abrir PDF
+                                </Button>
                                 <Button
                                     onClick={() => handleDownloadPDF(solicitud.reporte_generado_url!, solicitud.solicitud_id)}
                                     disabled={pdfLoading}
                                     size="sm"
+                                    className="flex-1 sm:flex-none"
                                 >
                                     {pdfLoading ? (
                                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                     ) : (
                                         <DownloadIcon className="h-4 w-4 mr-2" />
                                     )}
-                                    Descargar PDF
+                                    Descargar
                                 </Button>
-                            </div>
-                            
-                            <div className="border rounded-lg overflow-hidden">
-                                <iframe
-                                    src={solicitud.reporte_generado_url}
-                                    className="w-full h-96"
-                                    title="Vista previa del PDF"
-                                />
                             </div>
                         </div>
                     ) : (

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react"
 import ConsultaExistencia from "./ConsultaExistencia"
 import TablaProductos from "./TablaProductos"
 import FileUpload from "@/components/Files/FileUpload"
+import { createImageThumbnail } from "@/lib/image-utils"
 import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -128,6 +129,12 @@ const GestionComponent = ({ tipo = 'Entrada', titulo = "Entrada de Productos" }:
 
             if (selectedFile) {
                 formData.append('comprobante', selectedFile)
+                if (selectedFile.type.startsWith('image/')) {
+                    const thumb = await createImageThumbnail(selectedFile)
+                    if (thumb) {
+                        formData.append('comprobante_thumb', thumb)
+                    }
+                }
             }
 
             // Agregar credenciales de autenticación si se requieren

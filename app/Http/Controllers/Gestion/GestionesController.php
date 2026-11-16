@@ -211,7 +211,11 @@ class GestionesController extends Controller
                 $uploadData = $uploadResult->getData(true);
 
                 if ($uploadData['success']) {
-                    $gestion->update(['imagen_comprobante' => $uploadData['url']]);
+                    $updatePayload = ['imagen_comprobante' => $uploadData['url']];
+                    if (!empty($uploadData['thumbnail_url'])) {
+                        $updatePayload['imagen_comprobante_thumb'] = $uploadData['thumbnail_url'];
+                    }
+                    $gestion->update($updatePayload);
                 } else {
                     Log::error('Error uploading file for management ' . $gestion->gestion_inv_id . ': ' . ($uploadData['error'] ?? 'Unknown error'));
                 }

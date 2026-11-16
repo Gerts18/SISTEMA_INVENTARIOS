@@ -16,7 +16,9 @@ class GestionInventario extends Model
         'usuario_id', 
         'fecha', 
         'imagen_comprobante',
-        'tipo_gestion'
+        'imagen_comprobante_thumb',
+        'tipo_gestion',
+        'clics_count',
     ];
 
     public function usuario()

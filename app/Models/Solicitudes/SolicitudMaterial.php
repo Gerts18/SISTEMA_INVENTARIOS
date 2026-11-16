@@ -17,7 +17,8 @@ class SolicitudMaterial extends Model
         'obra_id',
         'fecha_solicitud',
         'concepto',
-        'reporte_generado_url'
+        'reporte_generado_url',
+        'clics_count',
     ];
 
     public static $rules = [

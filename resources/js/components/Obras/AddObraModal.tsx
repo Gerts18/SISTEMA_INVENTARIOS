@@ -8,6 +8,7 @@ import { DialogDescription } from '@radix-ui/react-dialog';
 import { CirclePlus } from 'lucide-react';
 import React, { useState, useMemo } from 'react';
 import MultiFileUpload from '@/components/Files/MultiFileUpload';
+import { createImageThumbnail } from '@/lib/image-utils';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
 
@@ -77,12 +78,19 @@ export const AddObraModal: React.FC<AddObraModalProps> = ({ onSuccess }) => {
         formDataToSend.append('descripcion', formData.descripcion);
         formDataToSend.append('fecha_final', formData.fecha_final);
         
-        // Agregar archivos
-        validFiles.forEach((file, index) => {
+        // Agregar archivos y generar miniaturas para imágenes
+        for (let index = 0; index < validFiles.length; index++) {
+            const file = validFiles[index];
             if (file) {
                 formDataToSend.append(`archivo_${index}`, file);
+                if (file.type.startsWith('image/')) {
+                    const thumb = await createImageThumbnail(file);
+                    if (thumb) {
+                        formDataToSend.append(`archivo_${index}_thumb`, thumb);
+                    }
+                }
             }
-        });
+        }
 
         try {
             const response = await axios.post(route('obras.store'), formDataToSend, {

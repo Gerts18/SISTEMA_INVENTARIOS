@@ -14,6 +14,8 @@ class ArchivoObra extends Model
         'obra_id',
         'nombre_archivo',
         'url_archivo',
+        'url_thumbnail',
+        'clics_count',
     ];
 
     public static $rules = [

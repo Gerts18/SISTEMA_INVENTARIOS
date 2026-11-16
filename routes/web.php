@@ -14,6 +14,7 @@ use App\Http\Controllers\Obras\ObrasController;
 use App\Http\Controllers\Reportes\ReportesController;
 use App\Http\Controllers\Productos\ProductosController;
 use App\Http\Controllers\ReportesArea\ReportesAreaController;
+use App\Http\Controllers\Telemetry\TelemetryController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -120,6 +121,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{entregaId}/devolver', [EntregasController::class, 'devolver'])->name('entregas.devolver');
         Route::post('/{entregaId}/completar', [EntregasController::class, 'completar'])->name('entregas.completar');
     });
+
+    // Telemetría y monitoreo de clics en archivos
+    Route::post('/telemetry/track-click', [TelemetryController::class, 'trackClick'])->name('telemetry.track');
+    Route::get('/telemetry/stats', [TelemetryController::class, 'getStats'])->name('telemetry.stats');
 });
 
 require __DIR__ . '/settings.php';

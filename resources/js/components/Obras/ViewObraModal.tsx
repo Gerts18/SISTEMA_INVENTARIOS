@@ -12,11 +12,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import axios from "axios"
+import { trackFileClick } from "@/lib/telemetry"
 
 interface Archivo {
     archivo_id: number;
     nombre_archivo: string;
     url_archivo: string;
+    url_thumbnail?: string | null;
+    clics_count?: number;
 }
 
 interface Registro {
@@ -278,6 +281,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
     };
 
     const handlePreviewFile = (archivo: Archivo) => {
+        trackFileClick('archivo_obra', archivo.archivo_id);
         setPreviewFile(archivo);
         setIsPreviewOpen(true);
     };
@@ -516,7 +520,7 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                                 {isImageFile(archivo.nombre_archivo) ? (
                                                     <div className="relative h-32 bg-gray-100 rounded overflow-hidden">
                                                         <img
-                                                            src={archivo.url_archivo}
+                                                            src={archivo.url_thumbnail || archivo.url_archivo}
                                                             alt={archivo.nombre_archivo}
                                                             className="w-full h-full object-cover cursor-pointer hover:opacity-80"
                                                             onClick={() => handlePreviewFile(archivo)}
@@ -647,11 +651,23 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                         className="w-full h-full object-contain"
                                     />
                                 ) : isPdfFile(previewFile.nombre_archivo) ? (
-                                    <iframe
-                                        src={previewFile.url_archivo}
-                                        className="w-full h-full"
-                                        title={previewFile.nombre_archivo}
-                                    />
+                                    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                                        <FileTextIcon className="h-16 w-16 text-red-500 mb-3" />
+                                        <h4 className="text-base font-semibold text-gray-800 mb-1">{previewFile.nombre_archivo}</h4>
+                                        <p className="text-sm text-gray-500 mb-4 max-w-md">
+                                            Para ahorrar transferencia de datos y optimizar la velocidad, el archivo PDF se abre bajo demanda.
+                                        </p>
+                                        <Button
+                                            onClick={() => {
+                                                trackFileClick('archivo_obra', previewFile.archivo_id);
+                                                window.open(previewFile.url_archivo, '_blank');
+                                            }}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <ExternalLinkIcon className="h-4 w-4" />
+                                            Abrir / Descargar PDF
+                                        </Button>
+                                    </div>
                                 ) : (
                                     <div className="flex items-center justify-center h-full">
                                         <div className="text-center">
@@ -661,7 +677,10 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                                             </p>
                                             <Button
                                                 variant="outline"
-                                                onClick={() => window.open(previewFile.url_archivo, '_blank')}
+                                                onClick={() => {
+                                                    trackFileClick('archivo_obra', previewFile.archivo_id);
+                                                    window.open(previewFile.url_archivo, '_blank');
+                                                }}
                                                 className="mt-2"
                                             >
                                                 Abrir en nueva ventana
@@ -676,7 +695,12 @@ export function ViewObraModal({ obra, isOpen, onClose }: ViewObraModalProps) {
                     <div className="flex justify-end gap-2 pt-4">
                         <Button
                             variant="outline"
-                            onClick={() => previewFile && window.open(previewFile.url_archivo, '_blank')}
+                            onClick={() => {
+                                if (previewFile) {
+                                    trackFileClick('archivo_obra', previewFile.archivo_id);
+                                    window.open(previewFile.url_archivo, '_blank');
+                                }
+                            }}
                         >
                             Abrir en nueva ventana
                         </Button>

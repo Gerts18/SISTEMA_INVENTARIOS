@@ -90,6 +90,9 @@ class ObrasController extends Controller
                     
                     $fileRequest = new Request();
                     $fileRequest->files->set('archivo', $file);
+                    if ($request->hasFile("archivo_{$i}_thumb")) {
+                        $fileRequest->files->set('archivo_thumb', $request->file("archivo_{$i}_thumb"));
+                    }
                     
                     $uploadResult = $filesController->subirArchivoObra(
                         $fileRequest, 
@@ -104,6 +107,7 @@ class ObrasController extends Controller
                             'obra_id' => $obra->obra_id,
                             'nombre_archivo' => $uploadData['filename'],
                             'url_archivo' => $uploadData['url'],
+                            'url_thumbnail' => $uploadData['thumbnail_url'] ?? null,
                         ]);
                     } else {
                         Log::error('Error uploading file for obra ' . $obra->obra_id . ': ' . ($uploadData['error'] ?? 'Unknown error'));
