@@ -9,7 +9,7 @@ COPY . .
 # Vite production environment variables — baked into the JS bundle at build time
 ENV VITE_APP_NAME=Inventario \
     VITE_REVERB_APP_KEY=ojsknwmymd3nbgwrqbbz \
-    VITE_REVERB_HOST=sistema-inventarios-deploy-latest.onrender.com \
+    VITE_REVERB_HOST=sistema-inventarios-deploy-free.onrender.com \
     VITE_REVERB_PORT=443 \
     VITE_REVERB_SCHEME=https
 
